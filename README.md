@@ -1,6 +1,6 @@
 # SEIQR Epidemic Cellular Automaton
 
-[![Ko-fi](https://img.shields.io/badge/Ko--fi-support_this_project-FF5E5B?logo=ko-fi&logoColor=white)](https://ko-fi.com/ethanbuckley)
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/ethanbuckley)
 
 A stochastic 2D cellular automaton modelling epidemic spread across a spatially heterogeneous population, extended from a UCL group project into an individually-developed, interactive portfolio piece.
 
@@ -10,7 +10,7 @@ A stochastic 2D cellular automaton modelling epidemic spread across a spatially 
 
 ## Live Demo
 
-**[Launch the dashboard →](https://your-app-name.streamlit.app)** *(placeholder — update after deployment)*
+**[Launch the dashboard →](https://epidemiccellularautomata-bhc8wjiiughpqeuljwgzew.streamlit.app)**
 
 ---
 
@@ -58,7 +58,8 @@ Centre vaccination + centre-only lockdown achieves the best outcome overall, kee
 | No reproducible experiment script | `run_experiments.py`: all report scenarios in 4.4s, saved to `data/results.json` |
 | Console output only | Interactive Streamlit dashboard with live parameter controls and precomputed report figures |
 
-**Planned extensions:** unit tests + CI, network-topology model variant, ABC parameter calibration.
+**Phase 1 (complete):** vectorization, experiment pipeline, interactive Streamlit dashboard.
+**Planned (Phase 2+):** unit tests + CI, network-topology model variant, ABC parameter calibration.
 
 ---
 
