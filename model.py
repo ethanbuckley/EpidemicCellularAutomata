@@ -20,11 +20,19 @@ _NEIGHBOUR_KERNEL = np.array([[1, 1, 1],
 # State constants
 S, E, I, Q, R = 0, 1, 2, 3, 4
 
+# Zone radii (Chebyshev distance from the grid centre) that define the three
+# concentric density zones. Single source of truth shared by make_density_map,
+# vaccinate and the experiment zone masks in run_experiments.py.
+CENTRE_RADIUS = 8
+MIDDLE_RADIUS = 16
+
 
 def make_density_map(n: int,
                      p_centre: float,
                      p_middle: float,
-                     p_outer: float) -> np.ndarray:
+                     p_outer: float,
+                     centre_radius: int = CENTRE_RADIUS,
+                     middle_radius: int = MIDDLE_RADIUS) -> np.ndarray:
     """
     Create an n×n density map with three concentric square zones.
     Vectorized: builds the map with two np.maximum calls, no Python loops.
@@ -34,8 +42,8 @@ def make_density_map(n: int,
     # Chebyshev distance from centre for every cell
     dist = np.maximum(np.abs(rows[:, None] - mid), np.abs(rows[None, :] - mid))
 
-    density = np.where(dist <= 8, p_centre,
-               np.where(dist <= 16, p_middle, p_outer))
+    density = np.where(dist <= centre_radius, p_centre,
+               np.where(dist <= middle_radius, p_middle, p_outer))
     return density.astype(float)
 
 
@@ -60,8 +68,8 @@ def vaccinate(grid: np.ndarray,
     susceptible = grid == S
 
     if targeted:
-        centre_mask = susceptible & (dist <= 8)
-        other_mask  = susceptible & (dist > 8)
+        centre_mask = susceptible & (dist <= CENTRE_RADIUS)
+        other_mask  = susceptible & (dist > CENTRE_RADIUS)
         centre_idx  = np.argwhere(centre_mask)
         other_idx   = np.argwhere(other_mask)
         rng.shuffle(centre_idx)
@@ -191,6 +199,16 @@ def run_seiqr(n: int,
     """
     if rng is None:
         rng = np.random.default_rng()
+
+    # A lockdown map is only meaningful with a window. Fail loudly on a
+    # half-specified lockdown rather than relying on short-circuit evaluation
+    # in the step loop (where lockdown_start/end would otherwise be indexed
+    # while None).
+    if lockdown_map is not None and (lockdown_start is None or lockdown_end is None):
+        raise ValueError(
+            "lockdown_start and lockdown_end must both be set when "
+            "lockdown_map is provided."
+        )
 
     if initial_grid is not None:
         grid = initial_grid.copy()
