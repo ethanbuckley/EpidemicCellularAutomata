@@ -13,6 +13,7 @@ Scenarios
 4. Vaccination comparison           (5 runs each: none / uniform / targeted)
 5. Combined strategy                (5 runs each: none / targeted / blanket)
 6. Epidemic threshold sweep         (3 runs each, ~20 baseline values)
+7. Analytical ODE validation        (well-mixed limit vs local CA)
 
 All model parameters come from a SimConfig (see config.py); the ensemble sizes
 and the threshold-sweep grid below are harness settings for this suite.
@@ -34,7 +35,7 @@ import numpy as np
 from config import SimConfig
 from model import (
     make_density_map, vaccinate, run_seiqr, run_ensemble,
-    S, E, I, Q, R,
+    I,
     CENTRE_RADIUS, MIDDLE_RADIUS,
 )
 
@@ -119,6 +120,55 @@ def _ensemble_with_zones(cfg, n_runs, density_map, seed_base,
     return curves, zones
 
 
+def _ode_validation(cfg, n_runs=20):
+    """
+    Scenario 7: validate the CA against the analytical SEIQR ODE.
+
+    On the uniform grid (p_expose = p_uniform) the well-mixed limit applies, so
+    a global-coupling CA ensemble should track the ODE; the exact discrete
+    recursion is the tightest reference. The standard local CA is included for
+    contrast: its departure is the spatial effect, not a validation failure.
+    """
+    import ode_reference as ode_ref
+
+    p = cfg.p_uniform
+    N = ode_ref.interior_n(cfg.n)
+
+    ode = ode_ref.integrate_seiqr(
+        p, cfg.p_infect, cfg.p_quarantine, cfg.p_recover_i, cfg.p_recover_q,
+        cfg.num_steps, N=N)
+    rec = ode_ref.seiqr_discrete_meanfield(
+        p, cfg.p_infect, cfg.p_quarantine, cfg.p_recover_i, cfg.p_recover_q,
+        cfg.num_steps, N=N)
+    wm = ode_ref.run_well_mixed_ensemble(
+        n_runs, cfg.n, p, cfg.p_infect, cfg.p_quarantine,
+        cfg.p_recover_i, cfg.p_recover_q, cfg.num_steps, seed=4000)
+    loc = ode_ref.run_local_ensemble(
+        n_runs, cfg.n, p, cfg.p_infect, cfg.p_quarantine,
+        cfg.p_recover_i, cfg.p_recover_q, cfg.num_steps, seed=5000)
+
+    rates = {k: float(v) for k, v in ode["rates"].items()}
+    rates["beta_lowprev"] = float(ode_ref.beta_lowprev(p))
+    rates["R0"] = float(ode["R0"])
+
+    return {
+        "params": {"p_expose": p, "p_infect": cfg.p_infect,
+                   "p_quarantine": cfg.p_quarantine,
+                   "p_recover_i": cfg.p_recover_i,
+                   "p_recover_q": cfg.p_recover_q},
+        "N_interior": N,
+        "n_runs": n_runs,
+        "rates": rates,
+        "ode": {k: ode["counts"][k].tolist() for k in "SEIQR"},
+        "discrete": {"I": rec["counts"]["I"].tolist()},
+        "well_mixed_ca": {**{k: wm["mean"][k].tolist() for k in "SEIQR"},
+                          "I_std": wm["I_std"].tolist()},
+        "local_ca": {"I": loc["I_mean"].tolist()},
+        "metrics": {"vs_ode": ode_ref.compare_curves(wm["mean"], ode["counts"], N),
+                    "vs_discrete": ode_ref.compare_curves(wm["mean"], rec["counts"], N)},
+    }
+
+
 # =============================================================================
 # MAIN
 # =============================================================================
@@ -131,7 +181,7 @@ def run_all(cfg: SimConfig = CFG):
     # ------------------------------------------------------------------
     # 1. Uniform vs density grid
     # ------------------------------------------------------------------
-    print("1/6  Uniform vs density grid …")
+    print("1/7  Uniform vs density grid …")
     results["uniform_grid"], _ = _ensemble_with_zones(
         cfg, N_RUNS_MAIN, uniform_map, seed_base=0)
     results["density_grid"], results["zone_breakdown"] = _ensemble_with_zones(
@@ -140,7 +190,7 @@ def run_all(cfg: SimConfig = CFG):
     # ------------------------------------------------------------------
     # 2. Lockdown comparison (density grid, no vaccination)
     # ------------------------------------------------------------------
-    print("2/6  Lockdown comparison …")
+    print("2/7  Lockdown comparison …")
     # Whole-grid lockdown map
     lockdown_whole  = make_density_map(cfg.n, cfg.lockdown_p, cfg.lockdown_p, cfg.lockdown_p)
     # Centre-only lockdown map: only centre zone reduced
@@ -160,7 +210,7 @@ def run_all(cfg: SimConfig = CFG):
     # ------------------------------------------------------------------
     # 3. Vaccination comparison (density grid, no lockdown)
     # ------------------------------------------------------------------
-    print("3/6  Vaccination comparison …")
+    print("3/7  Vaccination comparison …")
 
     def _uniform_vax(rng):
         g = np.zeros((cfg.n, cfg.n)); g[cfg.n//2, cfg.n//2] = I
@@ -184,7 +234,7 @@ def run_all(cfg: SimConfig = CFG):
     # ------------------------------------------------------------------
     # 4. Combined strategy (4 arms)
     # ------------------------------------------------------------------
-    print("4/6  Combined strategy …")
+    print("4/7  Combined strategy …")
 
     def _blanket_init(rng):
         g = np.zeros((cfg.n, cfg.n)); g[cfg.n//2, cfg.n//2] = I
@@ -221,7 +271,7 @@ def run_all(cfg: SimConfig = CFG):
     # ------------------------------------------------------------------
     # 5. Threshold sweep
     # ------------------------------------------------------------------
-    print("5/6  Threshold sweep …")
+    print("5/7  Threshold sweep …")
     sweep_uniform_peak = []
     sweep_density_peak = []
 
@@ -254,7 +304,7 @@ def run_all(cfg: SimConfig = CFG):
     # ------------------------------------------------------------------
     # 6. Speedup measurement (stored once for dashboard display)
     # ------------------------------------------------------------------
-    print("6/6  Measuring speedup …")
+    print("6/7  Measuring speedup …")
     from seiqr import run_seiqr as old_run
 
     REPS = 3
@@ -276,6 +326,12 @@ def run_all(cfg: SimConfig = CFG):
         "vectorized_s":  round(t_new, 4),
         "speedup_x":     round(t_old / t_new, 0),
     }
+
+    # ------------------------------------------------------------------
+    # 7. Analytical ODE validation (well-mixed limit)
+    # ------------------------------------------------------------------
+    print("7/7  ODE validation …")
+    results["ode_validation"] = _ode_validation(cfg)
 
     results["zone_sizes"]    = _zone_sizes(cfg.n)
     results["generated_at"]  = datetime.datetime.now(datetime.timezone.utc).strftime(

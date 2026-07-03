@@ -11,10 +11,7 @@ import numpy as np
 import plotly.graph_objects as go
 import streamlit as st
 
-from model import (
-    make_density_map, vaccinate, run_seiqr,
-    S, E, I, Q, R,
-)
+from model import make_density_map, vaccinate, run_seiqr, I
 
 # =============================================================================
 # PAGE CONFIG
@@ -450,6 +447,69 @@ with tab_perf:
                bit-identical because the two implementations consume random numbers
                in different orders, which is expected and acceptable for a stochastic model.
             """
+        )
+
+    # ── Validation against the analytical SEIQR ODE ───────────────────────────
+    ov = results.get("ode_validation") if results else None
+    if ov:
+        st.divider()
+        st.subheader("Validation against the analytical SEIQR ODE")
+
+        m_ode = ov["metrics"]["vs_ode"]
+        m_rec = ov["metrics"]["vs_discrete"]
+        N_int = ov["N_interior"]
+        Tv = list(range(len(ov["ode"]["I"])))
+
+        wm_I  = ov["well_mixed_ca"]["I"]
+        wm_sd = ov["well_mixed_ca"]["I_std"]
+        upper = [m + s for m, s in zip(wm_I, wm_sd)]
+        lower = [m - s for m, s in zip(wm_I, wm_sd)]
+
+        figv = go.Figure()
+        figv.add_trace(go.Scatter(
+            x=Tv + Tv[::-1], y=upper + lower[::-1], fill="toself",
+            fillcolor="rgba(37,99,235,0.15)", line=dict(width=0),
+            hoverinfo="skip", showlegend=False,
+        ))
+        figv.add_trace(go.Scatter(
+            x=Tv, y=wm_I, name=f"Global-coupling CA ({ov['n_runs']} runs, ±1σ)",
+            line=dict(color="#2563EB", width=2)))
+        figv.add_trace(go.Scatter(
+            x=Tv, y=ov["ode"]["I"], name="Mean-field ODE",
+            line=dict(color="#111827", width=2)))
+        figv.add_trace(go.Scatter(
+            x=Tv, y=ov["local_ca"]["I"], name="Local (spatial) CA",
+            line=dict(color="#DC2626", width=2, dash="dash")))
+        figv.update_layout(
+            title="Infected count: analytical ODE vs well-mixed and spatial CA",
+            xaxis_title="Timestep", yaxis_title=f"Infected (of {N_int} interior cells)",
+            legend=dict(orientation="h", y=1.15),
+            margin=dict(l=0, r=0, t=60, b=0), height=420,
+        )
+        st.plotly_chart(figv, use_container_width=True)
+
+        c1, c2, c3, c4 = st.columns(4)
+        c1.metric("R₀ (well-mixed)", f"{ov['rates']['R0']:.1f}")
+        c2.metric("Peak I: CA / ODE", f"{m_ode['peak_ca']:.0f} / {m_ode['peak_ref']:.0f}",
+                  help="Well-mixed CA ensemble-mean peak vs the ODE peak "
+                       f"({m_ode['peak_rel_err_pct']:.1f}% apart)")
+        c3.metric("Attack rate: CA / ODE",
+                  f"{m_ode['attack_ca']:.3f} / {m_ode['attack_ref']:.3f}")
+        c4.metric("RMSE vs exact recursion", f"{m_rec['rmse_pct_of_peak']:.1f}% of peak")
+
+        st.caption(
+            "The CA's local rules reduce to the classical well-mixed SEIQR ODE in the "
+            "mean-field limit. Driven by the global infected fraction instead of local "
+            "neighbours, the CA ensemble (blue, ±1σ) reproduces the exact discrete "
+            f"recursion to {m_rec['rmse_pct_of_peak']:.1f}% of peak, and matches the "
+            f"continuous ODE's peak height to {m_ode['peak_rel_err_pct']:.1f}% and its final "
+            "attack rate almost exactly. The ODE peaks a few steps earlier (a "
+            f"continuous-vs-discrete time effect at R₀ ≈ {ov['rates']['R0']:.0f}), which is why "
+            "the black and blue curves are offset rather than coincident. The standard local "
+            "(spatial) CA (red dashed) departs from the ODE with a lower, later, broader peak. "
+            "That gap is the effect of spatial structure and local susceptible depletion, not a "
+            f"validation failure. Curves use the participating interior of {N_int} cells; the "
+            "grid border is permanently susceptible and excluded."
         )
 
 # =============================================================================
