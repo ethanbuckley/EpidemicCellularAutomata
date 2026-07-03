@@ -177,6 +177,12 @@ def _ode_validation(cfg, n_runs=20):
 # =============================================================================
 
 def run_all(cfg: SimConfig = CFG):
+    """Run every scenario and return the results dict written to results.json.
+
+    The curve-producing scenarios use fixed per-run seeds, so the output is
+    reproducible; only the speedup timings and the generated_at timestamp vary
+    between runs.
+    """
     results = {}
     density_map = make_density_map(cfg.n, cfg.p_centre, cfg.p_middle, cfg.p_outer)
     uniform_map = make_density_map(cfg.n, cfg.p_uniform, cfg.p_uniform, cfg.p_uniform)
