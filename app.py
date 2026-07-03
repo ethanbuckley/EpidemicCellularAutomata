@@ -188,7 +188,7 @@ with tab_interactive:
 
         seed_val   = st.number_input("Random seed", 0, 9999, 42, 1)
         run_btn    = st.button("Run simulation", type="primary",
-                               use_container_width=True)
+                               width="stretch")
 
     # ── Run simulation ────────────────────────────────────────────────────────
     if run_btn or "sim_grids" not in st.session_state:
@@ -234,7 +234,7 @@ with tab_interactive:
         with left:
             st.plotly_chart(
                 _make_grid_fig(st.session_state["sim_grids"][step], step),
-                use_container_width=True,
+                width="stretch",
             )
         with right:
             st.plotly_chart(
@@ -244,7 +244,7 @@ with tab_interactive:
                     st.session_state["sim_R"],
                     highlight_step=step, lockdown_window=lw,
                 ),
-                use_container_width=True,
+                width="stretch",
             )
 
         # Legend
@@ -300,7 +300,7 @@ with tab_report:
     fig4a = _base_fig("Total infected over time (5-run mean)")
     _line(fig4a, T, results["uniform_grid"]["I"], "Uniform grid", "#6366F1")
     _line(fig4a, T, results["density_grid"]["I"], "Density grid", "#DC2626")
-    st.plotly_chart(fig4a, use_container_width=True)
+    st.plotly_chart(fig4a, width="stretch")
 
     st.caption(
         "The density grid produces a lower, earlier infection peak (~210 at t≈45) "
@@ -314,7 +314,7 @@ with tab_report:
     _line(fig4b, T, results["zone_breakdown"]["centre"], "Centre", "#DC2626")
     _line(fig4b, T, results["zone_breakdown"]["middle"], "Middle", "#F97316")
     _line(fig4b, T, results["zone_breakdown"]["outer"],  "Outer",  "#2563EB")
-    st.plotly_chart(fig4b, use_container_width=True)
+    st.plotly_chart(fig4b, width="stretch")
 
     st.caption(
         "Infection spreads outward in a measurable wave: the centre peaks first and "
@@ -333,7 +333,7 @@ with tab_report:
         _line(fig5a, T, results["lockdown_none"]["I"],   "No lockdown",      "#6B7280")
         _line(fig5a, T, results["lockdown_whole"]["I"],  "Whole-grid",       "#DC2626")
         _line(fig5a, T, results["lockdown_centre"]["I"], "Centre-only",      "#F97316", dash="dash")
-        st.plotly_chart(fig5a, use_container_width=True)
+        st.plotly_chart(fig5a, width="stretch")
         st.caption(
             "Centre-only lockdown (12% of grid) achieves comparable suppression "
             "to whole-grid lockdown — far more resource efficient."
@@ -344,7 +344,7 @@ with tab_report:
         _line(fig5b, T, results["vax_none"]["I"],     "No vaccination", "#6B7280")
         _line(fig5b, T, results["vax_uniform"]["I"],  "Uniform",        "#6366F1")
         _line(fig5b, T, results["vax_targeted"]["I"], "Targeted (centre)", "#16A34A", dash="dash")
-        st.plotly_chart(fig5b, use_container_width=True)
+        st.plotly_chart(fig5b, width="stretch")
         st.caption(
             "200 doses concentrated in the centre zone dramatically outperform "
             "the same doses distributed uniformly across 2,500 cells."
@@ -360,7 +360,7 @@ with tab_report:
     _line(fig7, T, results["combined_vax_only"]["I"], "Targeted vax only",           "#F97316")
     _line(fig7, T, results["combined_blanket"]["I"],  "Uniform vax + whole lockdown","#6366F1")
     _line(fig7, T, results["combined_targeted"]["I"], "Targeted vax + centre lockdown","#16A34A", dash="dash")
-    st.plotly_chart(fig7, use_container_width=True)
+    st.plotly_chart(fig7, width="stretch")
     st.caption(
         "The targeted combination (centre vaccination + centre lockdown) achieves "
         "the lowest peak while using fewer resources than the blanket approach."
@@ -382,7 +382,7 @@ with tab_report:
         line=dict(color="#DC2626", width=2, dash="dash"),
     ))
     fig6.update_layout(xaxis_title="Baseline p_expose")
-    st.plotly_chart(fig6, use_container_width=True)
+    st.plotly_chart(fig6, width="stretch")
     st.caption(
         "The density grid caps worst-case epidemic peaks at higher transmission rates. "
         "At low transmission (p_expose ≤ 0.075) the density grid can produce a slightly "
@@ -486,7 +486,7 @@ with tab_perf:
             legend=dict(orientation="h", y=1.15),
             margin=dict(l=0, r=0, t=60, b=0), height=420,
         )
-        st.plotly_chart(figv, use_container_width=True)
+        st.plotly_chart(figv, width="stretch")
 
         c1, c2, c3, c4 = st.columns(4)
         c1.metric("R₀ (well-mixed)", f"{ov['rates']['R0']:.1f}")
