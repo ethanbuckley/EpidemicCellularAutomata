@@ -106,8 +106,11 @@ def _ensemble_with_zones(cfg, n_runs, density_map, seed_base,
             rng=rng,
             store_grids=True,
         )
-        totals['S'] += Sc;  totals['E'] += Ec
-        totals['I'] += Ic;  totals['Q'] += Qc;  totals['R'] += Rc
+        totals['S'] += Sc
+        totals['E'] += Ec
+        totals['I'] += Ic
+        totals['Q'] += Qc
+        totals['R'] += Rc
 
         for t, g in enumerate(grids):
             infected = (g == I)
@@ -213,12 +216,14 @@ def run_all(cfg: SimConfig = CFG):
     print("3/7  Vaccination comparison …")
 
     def _uniform_vax(rng):
-        g = np.zeros((cfg.n, cfg.n)); g[cfg.n//2, cfg.n//2] = I
+        g = np.zeros((cfg.n, cfg.n))
+        g[cfg.n // 2, cfg.n // 2] = I
         return vaccinate(g, cfg.n, cfg.vax_doses, targeted=False,
                          efficacy=cfg.vax_efficacy, rng=rng)
 
     def _targeted_vax(rng):
-        g = np.zeros((cfg.n, cfg.n)); g[cfg.n//2, cfg.n//2] = I
+        g = np.zeros((cfg.n, cfg.n))
+        g[cfg.n // 2, cfg.n // 2] = I
         return vaccinate(g, cfg.n, cfg.vax_doses, targeted=True,
                          efficacy=cfg.vax_efficacy, rng=rng)
 
@@ -237,12 +242,14 @@ def run_all(cfg: SimConfig = CFG):
     print("4/7  Combined strategy …")
 
     def _blanket_init(rng):
-        g = np.zeros((cfg.n, cfg.n)); g[cfg.n//2, cfg.n//2] = I
+        g = np.zeros((cfg.n, cfg.n))
+        g[cfg.n // 2, cfg.n // 2] = I
         return vaccinate(g, cfg.n, cfg.vax_doses, targeted=False,
                          efficacy=cfg.vax_efficacy, rng=rng)
 
     def _targeted_init(rng):
-        g = np.zeros((cfg.n, cfg.n)); g[cfg.n//2, cfg.n//2] = I
+        g = np.zeros((cfg.n, cfg.n))
+        g[cfg.n // 2, cfg.n // 2] = I
         return vaccinate(g, cfg.n, cfg.vax_doses, targeted=True,
                          efficacy=cfg.vax_efficacy, rng=rng)
 

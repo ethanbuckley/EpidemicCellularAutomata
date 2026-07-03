@@ -1,0 +1,4 @@
+# Development and CI tooling (not needed to run the app).
+-r requirements.txt
+pytest>=8
+ruff>=0.6
