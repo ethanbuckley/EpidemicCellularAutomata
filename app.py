@@ -11,10 +11,7 @@ import numpy as np
 import plotly.graph_objects as go
 import streamlit as st
 
-from model import (
-    make_density_map, vaccinate, run_seiqr,
-    S, E, I, Q, R,
-)
+from model import make_density_map, vaccinate, run_seiqr, I
 
 # =============================================================================
 # PAGE CONFIG
@@ -191,7 +188,7 @@ with tab_interactive:
 
         seed_val   = st.number_input("Random seed", 0, 9999, 42, 1)
         run_btn    = st.button("Run simulation", type="primary",
-                               use_container_width=True)
+                               width="stretch")
 
     # ── Run simulation ────────────────────────────────────────────────────────
     if run_btn or "sim_grids" not in st.session_state:
@@ -237,7 +234,7 @@ with tab_interactive:
         with left:
             st.plotly_chart(
                 _make_grid_fig(st.session_state["sim_grids"][step], step),
-                use_container_width=True,
+                width="stretch",
             )
         with right:
             st.plotly_chart(
@@ -247,7 +244,7 @@ with tab_interactive:
                     st.session_state["sim_R"],
                     highlight_step=step, lockdown_window=lw,
                 ),
-                use_container_width=True,
+                width="stretch",
             )
 
         # Legend
@@ -303,7 +300,7 @@ with tab_report:
     fig4a = _base_fig("Total infected over time (5-run mean)")
     _line(fig4a, T, results["uniform_grid"]["I"], "Uniform grid", "#6366F1")
     _line(fig4a, T, results["density_grid"]["I"], "Density grid", "#DC2626")
-    st.plotly_chart(fig4a, use_container_width=True)
+    st.plotly_chart(fig4a, width="stretch")
 
     st.caption(
         "The density grid produces a lower, earlier infection peak (~210 at t≈45) "
@@ -317,7 +314,7 @@ with tab_report:
     _line(fig4b, T, results["zone_breakdown"]["centre"], "Centre", "#DC2626")
     _line(fig4b, T, results["zone_breakdown"]["middle"], "Middle", "#F97316")
     _line(fig4b, T, results["zone_breakdown"]["outer"],  "Outer",  "#2563EB")
-    st.plotly_chart(fig4b, use_container_width=True)
+    st.plotly_chart(fig4b, width="stretch")
 
     st.caption(
         "Infection spreads outward in a measurable wave: the centre peaks first and "
@@ -336,7 +333,7 @@ with tab_report:
         _line(fig5a, T, results["lockdown_none"]["I"],   "No lockdown",      "#6B7280")
         _line(fig5a, T, results["lockdown_whole"]["I"],  "Whole-grid",       "#DC2626")
         _line(fig5a, T, results["lockdown_centre"]["I"], "Centre-only",      "#F97316", dash="dash")
-        st.plotly_chart(fig5a, use_container_width=True)
+        st.plotly_chart(fig5a, width="stretch")
         st.caption(
             "Centre-only lockdown (12% of grid) achieves comparable suppression "
             "to whole-grid lockdown — far more resource efficient."
@@ -347,7 +344,7 @@ with tab_report:
         _line(fig5b, T, results["vax_none"]["I"],     "No vaccination", "#6B7280")
         _line(fig5b, T, results["vax_uniform"]["I"],  "Uniform",        "#6366F1")
         _line(fig5b, T, results["vax_targeted"]["I"], "Targeted (centre)", "#16A34A", dash="dash")
-        st.plotly_chart(fig5b, use_container_width=True)
+        st.plotly_chart(fig5b, width="stretch")
         st.caption(
             "200 doses concentrated in the centre zone dramatically outperform "
             "the same doses distributed uniformly across 2,500 cells."
@@ -363,7 +360,7 @@ with tab_report:
     _line(fig7, T, results["combined_vax_only"]["I"], "Targeted vax only",           "#F97316")
     _line(fig7, T, results["combined_blanket"]["I"],  "Uniform vax + whole lockdown","#6366F1")
     _line(fig7, T, results["combined_targeted"]["I"], "Targeted vax + centre lockdown","#16A34A", dash="dash")
-    st.plotly_chart(fig7, use_container_width=True)
+    st.plotly_chart(fig7, width="stretch")
     st.caption(
         "The targeted combination (centre vaccination + centre lockdown) achieves "
         "the lowest peak while using fewer resources than the blanket approach."
@@ -385,7 +382,7 @@ with tab_report:
         line=dict(color="#DC2626", width=2, dash="dash"),
     ))
     fig6.update_layout(xaxis_title="Baseline p_expose")
-    st.plotly_chart(fig6, use_container_width=True)
+    st.plotly_chart(fig6, width="stretch")
     st.caption(
         "The density grid caps worst-case epidemic peaks at higher transmission rates. "
         "At low transmission (p_expose ≤ 0.075) the density grid can produce a slightly "
@@ -450,6 +447,69 @@ with tab_perf:
                bit-identical because the two implementations consume random numbers
                in different orders, which is expected and acceptable for a stochastic model.
             """
+        )
+
+    # ── Validation against the analytical SEIQR ODE ───────────────────────────
+    ov = results.get("ode_validation") if results else None
+    if ov:
+        st.divider()
+        st.subheader("Validation against the analytical SEIQR ODE")
+
+        m_ode = ov["metrics"]["vs_ode"]
+        m_rec = ov["metrics"]["vs_discrete"]
+        N_int = ov["N_interior"]
+        Tv = list(range(len(ov["ode"]["I"])))
+
+        wm_I  = ov["well_mixed_ca"]["I"]
+        wm_sd = ov["well_mixed_ca"]["I_std"]
+        upper = [m + s for m, s in zip(wm_I, wm_sd)]
+        lower = [m - s for m, s in zip(wm_I, wm_sd)]
+
+        figv = go.Figure()
+        figv.add_trace(go.Scatter(
+            x=Tv + Tv[::-1], y=upper + lower[::-1], fill="toself",
+            fillcolor="rgba(37,99,235,0.15)", line=dict(width=0),
+            hoverinfo="skip", showlegend=False,
+        ))
+        figv.add_trace(go.Scatter(
+            x=Tv, y=wm_I, name=f"Global-coupling CA ({ov['n_runs']} runs, ±1σ)",
+            line=dict(color="#2563EB", width=2)))
+        figv.add_trace(go.Scatter(
+            x=Tv, y=ov["ode"]["I"], name="Mean-field ODE",
+            line=dict(color="#111827", width=2)))
+        figv.add_trace(go.Scatter(
+            x=Tv, y=ov["local_ca"]["I"], name="Local (spatial) CA",
+            line=dict(color="#DC2626", width=2, dash="dash")))
+        figv.update_layout(
+            title="Infected count: analytical ODE vs well-mixed and spatial CA",
+            xaxis_title="Timestep", yaxis_title=f"Infected (of {N_int} interior cells)",
+            legend=dict(orientation="h", y=1.15),
+            margin=dict(l=0, r=0, t=60, b=0), height=420,
+        )
+        st.plotly_chart(figv, width="stretch")
+
+        c1, c2, c3, c4 = st.columns(4)
+        c1.metric("R₀ (well-mixed)", f"{ov['rates']['R0']:.1f}")
+        c2.metric("Peak I: CA / ODE", f"{m_ode['peak_ca']:.0f} / {m_ode['peak_ref']:.0f}",
+                  help="Well-mixed CA ensemble-mean peak vs the ODE peak "
+                       f"({m_ode['peak_rel_err_pct']:.1f}% apart)")
+        c3.metric("Attack rate: CA / ODE",
+                  f"{m_ode['attack_ca']:.3f} / {m_ode['attack_ref']:.3f}")
+        c4.metric("RMSE vs exact recursion", f"{m_rec['rmse_pct_of_peak']:.1f}% of peak")
+
+        st.caption(
+            "The CA's local rules reduce to the classical well-mixed SEIQR ODE in the "
+            "mean-field limit. Driven by the global infected fraction instead of local "
+            "neighbours, the CA ensemble (blue, ±1σ) reproduces the exact discrete "
+            f"recursion to {m_rec['rmse_pct_of_peak']:.1f}% of peak, and matches the "
+            f"continuous ODE's peak height to {m_ode['peak_rel_err_pct']:.1f}% and its final "
+            "attack rate almost exactly. The ODE peaks a few steps earlier (a "
+            f"continuous-vs-discrete time effect at R₀ ≈ {ov['rates']['R0']:.0f}), which is why "
+            "the black and blue curves are offset rather than coincident. The standard local "
+            "(spatial) CA (red dashed) departs from the ODE with a lower, later, broader peak. "
+            "That gap is the effect of spatial structure and local susceptible depletion, not a "
+            f"validation failure. Curves use the participating interior of {N_int} cells; the "
+            "grid border is permanently susceptible and excluded."
         )
 
 # =============================================================================

@@ -1,0 +1,17 @@
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
+
+[tool.ruff]
+target-version = "py310"
+
+[tool.ruff.lint]
+# S, E, I, Q, R are the standard SEIQR compartment names used throughout the
+# model; I trips E741 (ambiguous name) but is intentional and expected here.
+ignore = ["E741"]
+
+[tool.ruff.lint.per-file-ignores]
+# seiqr.py is the preserved original group-project code, kept unmodified as a
+# reference and equivalence-test target, so its legacy unused imports are not
+# linted.
+"seiqr.py" = ["F401"]
