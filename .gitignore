@@ -1,3 +1,8 @@
 __pycache__/
 *.pyc
 .env
+.venv/
+
+# Original group report: contains other team members' work, kept out of the
+# public repository pending their agreement. Team credit is given in the README.
+Epidemics Report_Final .pdf
