@@ -1,0 +1,36 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "SEIQR Epidemic Cellular Automaton"
+abstract: >-
+  A stochastic 2D SEIQR cellular automaton modelling epidemic spread across a
+  spatially heterogeneous population, with a vectorised simulation core, a
+  reproducible experiment pipeline, an interactive Streamlit dashboard, and a
+  validation of the model against the analytical mean-field SEIQR ODE. An
+  individual extension of a UCL group computing project.
+type: software
+authors:
+  - family-names: Buckley
+    given-names: Ethan
+    affiliation: "University College London"
+repository-code: "https://github.com/ethanbuckley/EpidemicCellularAutomata"
+url: "https://github.com/ethanbuckley/EpidemicCellularAutomata"
+license: MIT
+keywords:
+  - cellular-automaton
+  - epidemiology
+  - SEIQR
+  - agent-based-model
+  - stochastic-simulation
+references:
+  - type: article
+    title: "Computational Model on COVID-19 Pandemic Using Probabilistic Cellular Automata"
+    authors:
+      - family-names: Ghosh
+        given-names: S.
+      - family-names: Bhattacharya
+        given-names: S.
+    journal: "SN Computer Science"
+    volume: 2
+    issue: 3
+    year: 2021
+    doi: "10.1007/s42979-021-00619-3"

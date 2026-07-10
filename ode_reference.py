@@ -76,7 +76,7 @@ def seiqr_rates(p_infect: float, p_quarantine: float,
     return {"sigma": sigma, "gamma_Q": gamma_Q, "gamma_R": gamma_R, "delta": delta}
 
 
-def foi(i, p_expose: float):
+def foi(i: float | np.ndarray, p_expose: float) -> float | np.ndarray:
     """Mean-field force of infection: the rate form of the saturating CA rule.
 
     In a well-mixed population a fraction i is infectious, so a susceptible has
@@ -234,7 +234,7 @@ def well_mixed_advance(grid, n, p_expose, p_infect, p_quarantine,
     return new_grid
 
 
-def _interior_counts(grid):
+def _interior_counts(grid: np.ndarray) -> dict:
     """State counts over the interior (border-excluded) cells only."""
     inner = grid[1:-1, 1:-1]
     return {"S": int((inner == S).sum()), "E": int((inner == E).sum()),
