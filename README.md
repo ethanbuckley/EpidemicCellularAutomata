@@ -139,21 +139,34 @@ EpidemicCellularAutomata/
 
 ---
 
-## Running Locally
+## Installation
 
-### Dashboard only (reads precomputed results)
+**Prerequisites:** Python 3.10 or newer.
 
 ```bash
 git clone https://github.com/ethanbuckley/EpidemicCellularAutomata.git
 cd EpidemicCellularAutomata
-pip install -r requirements.txt
+pip install -r requirements.txt        # simulation core + dashboard
+pip install -r requirements-dev.txt    # adds pytest and ruff for tests and linting
+```
+
+`requirements-dev.txt` already includes everything in `requirements.txt`, so install it on its own if you intend to run the tests.
+
+---
+
+## Running Locally
+
+With the dependencies [installed](#installation):
+
+### Dashboard (reads precomputed results)
+
+```bash
 streamlit run app.py
 ```
 
 ### Re-run all experiments (regenerates data/results.json)
 
 ```bash
-pip install -r requirements.txt
 python run_experiments.py   # ~5 seconds, includes the ODE validation
 streamlit run app.py
 ```
@@ -161,7 +174,6 @@ streamlit run app.py
 ### Run the tests
 
 ```bash
-pip install -r requirements-dev.txt
 ruff check .
 pytest
 ```
@@ -169,7 +181,6 @@ pytest
 ### Regenerate the demo GIF
 
 ```bash
-pip install -r requirements-dev.txt
 python make_demo_gif.py      # writes assets/demo.gif
 ```
 
