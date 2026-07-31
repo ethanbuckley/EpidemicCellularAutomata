@@ -17,8 +17,12 @@ import numpy as np
 from config import SimConfig
 from model import make_density_map, run_seiqr
 
-STATE_COLOURS = ["#2563EB", "#F97316", "#DC2626", "#7C3AED", "#16A34A"]
+# Palette matches the portfolio site (ethanbuckley.github.io): ordered by value,
+# not hue, so the states separate for readers who cannot rely on colour alone.
+# S = site --line, E/I = ochre family, Q = palette grey, R = page teal.
+STATE_COLOURS = ["#D5DDE2", "#E0A03D", "#A52F22", "#8A99A2", "#147A70"]
 STATE_LABELS = ["Susceptible", "Exposed", "Infected", "Quarantined", "Recovered"]
+INK = "#17242c"          # site --ink
 
 OUTPUT = os.path.join(os.path.dirname(__file__), "assets", "demo.gif")
 
@@ -46,11 +50,19 @@ def main():
     im = ax.imshow(grids[0], cmap=cmap, vmin=0, vmax=4, interpolation="nearest")
     ax.set_xticks([])
     ax.set_yticks([])
-    title = ax.set_title("SEIQR spread on the density grid  (t = 0)", fontsize=10)
+    # Ink, not pure black: the susceptible state is now light, so the frame has to
+    # hold the grid edge against the white canvas without shouting.
+    for spine in ax.spines.values():
+        spine.set_edgecolor(INK)
+        spine.set_linewidth(0.8)
+    title = ax.set_title("SEIQR spread on the density grid  (t = 0)",
+                         fontsize=10, color=INK)
 
     handles = [plt.Rectangle((0, 0), 1, 1, color=c) for c in STATE_COLOURS]
-    ax.legend(handles, STATE_LABELS, loc="upper center",
-              bbox_to_anchor=(0.5, -0.02), ncol=3, fontsize=7, frameon=False)
+    legend = ax.legend(handles, STATE_LABELS, loc="upper center",
+                       bbox_to_anchor=(0.5, -0.02), ncol=3, fontsize=7, frameon=False)
+    for text in legend.get_texts():
+        text.set_color(INK)
     fig.tight_layout()
 
     def update(t):
