@@ -3,7 +3,7 @@
 [![CI](https://github.com/ethanbuckley/EpidemicCellularAutomata/actions/workflows/ci.yml/badge.svg)](https://github.com/ethanbuckley/EpidemicCellularAutomata/actions/workflows/ci.yml)
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/ethanbuckley)
 
-A stochastic 2D cellular automaton modelling epidemic spread across a spatially heterogeneous population, extended from a UCL group project into an individually-developed, interactive portfolio piece.
+A stochastic 2D cellular automaton modelling epidemic spread across a spatially heterogeneous population, extended from a UCL group project into an individually developed, interactive model.
 
 ![SEIQR epidemic spreading outward from a single seed across the density grid](assets/demo.gif)
 
@@ -25,7 +25,7 @@ _Infection (red) spreads as a wave from the dense centre; cells recover (green) 
 flowchart LR
     A["Density map\n(3 concentric zones)"] --> C
     B["Parameters\np_infect · p_quarantine\nlockdown · vaccination"] --> C
-    C["Vectorized CA core\nmodel.py\n(NumPy + convolve2d)"]
+    C["Vectorised CA core\nmodel.py\n(NumPy + convolve2d)"]
     C --> D["Single run\n(interactive, live)"]
     C --> E["Ensemble runner\nrun_experiments.py\n5-run averages"]
     E --> F["data/results.json"]
@@ -41,22 +41,22 @@ flowchart LR
 The density grid produces a lower, earlier infection peak (~210 at t≈45) vs the uniform grid (~300 at t≈60). The low-exposure outer zone acts as a natural brake on transmission.
 
 **Wave-like propagation**
-Infection spreads outward from the dense centre in a measurable wave. The centre zone peaks first (34% infected at t≈21), the middle follows (25% at t≈45), and the outer zone peaks last (17% at t≈75).
+Infection spreads outward from the dense centre in a wave. The centre zone peaks first (34% infected at t≈21), the middle follows (25% at t≈45), and the outer zone peaks last (17% at t≈75).
 
 **Targeted lockdown**
-Locking down only the 289-cell centre zone (12% of the grid) produces nearly the same suppression as a whole-grid lockdown, significantly more resource efficient.
+Locking down only the 289-cell centre zone (12% of the grid) produces nearly the same suppression as a whole-grid lockdown.
 
 **Targeted vaccination**
-200 doses concentrated in the centre zone dramatically outperform the same 200 doses distributed uniformly. Uniform distribution gives negligible protection per zone; targeted distribution removes ~55% of susceptible individuals from the transmission engine.
+200 doses concentrated in the centre zone outperform the same 200 doses distributed uniformly. Uniform distribution gives negligible protection per zone; targeted distribution removes ~55% of the centre zone's susceptible individuals (200 doses × 80% efficacy ≈ 160 of 289 cells).
 
 **Combined strategy**
-Centre vaccination + centre-only lockdown achieves the best outcome overall, keeping peak infection below 60 during the lockdown window with a small post-lockdown rebound, using fewer resources than the blanket approach.
+Centre vaccination + centre-only lockdown achieves the best outcome overall, keeping peak infection below 60 during the lockdown window with a post-lockdown rebound far smaller than the blanket strategy's, using fewer resources.
 
 ---
 
 ## Validation against an analytical model
 
-The cellular automaton's local update rules reduce to the classical well-mixed SEIQR compartmental ODE in the mean-field limit. This makes the "checked against the analytical model" claim explicit rather than asserted.
+The cellular automaton's local update rules reduce to the classical well-mixed SEIQR compartmental ODE in the mean-field limit. Matching the ODE checks the rules were coded correctly, so the spatial model's departure from it can be read as real structure rather than a bug.
 
 - **Rate mapping.** Each per-timestep probability maps to a continuous ODE rate by `rate = -ln(1 - p)`. The common `rate ≈ p` shortcut is not used, because `p_infect = 0.50` makes it 28% wrong. The single-draw `I→Q` / `I→R` competition maps to a combined exit hazard, split in the ratio `p_quarantine : p_recover_i`.
 - **Saturating transmission.** The exposure rule fires on the presence of at least one infected Moore neighbour, so it saturates in the local infected count. Its mean-field force of infection is `λ(i) = -ln(1 - p_expose·(1 - (1 - i)^8))`, which linearises to a frequency-dependent `β = 8·p_expose` at low prevalence and gives a well-mixed basic reproduction number `R₀ = β / (γ_Q + γ_R) ≈ 15` at `p_expose = 0.30`.
@@ -73,7 +73,7 @@ Comparisons use the participating interior of 2,304 cells (the 48×48 grid exclu
 |---|---|
 | `seiqr.py`: nested Python `for` loops over all 2,500 cells | `model.py`: fully vectorised with `scipy.signal.convolve2d` + NumPy boolean masking |
 | ~0.55s per 100-step run | ~0.013s per run, **40× faster** |
-| No reproducible experiment script | `run_experiments.py`: all report scenarios in 4.4s, saved to `data/results.json` |
+| No reproducible experiment script | `run_experiments.py`: all report scenarios in ~5 s, saved to `data/results.json` |
 | Console output only | Interactive Streamlit dashboard with live parameter controls and precomputed report figures |
 | No analytical validation | `ode_reference.py`: CA validated against the well-mixed SEIQR ODE (see above) |
 | No tests or CI | pytest suite plus GitHub Actions running ruff and pytest |
@@ -208,4 +208,4 @@ This project is for educational and research purposes only. The model is a simpl
 ## Author
 
 Ethan Buckley, MSci Natural Sciences (Physics and Physical Chemistry), UCL
-[ethan.buckley.24@ucl.ac.uk](mailto:ethan.buckley.24@ucl.ac.uk) · [GitHub](https://github.com/ethanbuckley) · [LinkedIn](https://www.linkedin.com/in/ethan-buckley-b7ab6935b/)
+[ethan.buckley.24@ucl.ac.uk](mailto:ethan.buckley.24@ucl.ac.uk) · [GitHub](https://github.com/ethanbuckley) · [LinkedIn](https://www.linkedin.com/in/ethan-buckley/)
