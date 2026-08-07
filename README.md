@@ -1,7 +1,6 @@
 # SEIQR Epidemic Cellular Automaton
 
 [![CI](https://github.com/ethanbuckley/EpidemicCellularAutomata/actions/workflows/ci.yml/badge.svg)](https://github.com/ethanbuckley/EpidemicCellularAutomata/actions/workflows/ci.yml)
-[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/ethanbuckley)
 
 A stochastic 2D cellular automaton modelling epidemic spread across a spatially heterogeneous population, extended from a UCL group project into an individually developed, interactive model.
 
@@ -208,4 +207,4 @@ This project is for educational and research purposes only. The model is a simpl
 ## Author
 
 Ethan Buckley, MSci Natural Sciences (Physics and Physical Chemistry), UCL
-[ethan.buckley.24@ucl.ac.uk](mailto:ethan.buckley.24@ucl.ac.uk) · [GitHub](https://github.com/ethanbuckley) · [LinkedIn](https://www.linkedin.com/in/ethan-buckley/)
+[ethan@ethanbuckley.me.uk](mailto:ethan@ethanbuckley.me.uk) · [GitHub](https://github.com/ethanbuckley) · [LinkedIn](https://www.linkedin.com/in/ethan-buckley/)

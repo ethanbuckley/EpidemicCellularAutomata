@@ -518,10 +518,9 @@ with tab_perf:
 
 st.divider()
 st.markdown(
-    "Built by **Ethan Buckley** — "
+    "Built by **Ethan Buckley** · "
     "[GitHub](https://github.com/ethanbuckley) · "
-    "[LinkedIn](https://www.linkedin.com/in/ethan-buckley-b7ab6935b/) · "
-    "[Ko-fi](https://ko-fi.com/ethanbuckley) · "
+    "[LinkedIn](https://www.linkedin.com/in/ethan-buckley/) · "
     "UCL MSci Natural Sciences",
     unsafe_allow_html=False,
 )
