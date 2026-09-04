@@ -17,12 +17,14 @@ import numpy as np
 from config import SimConfig
 from model import make_density_map, run_seiqr
 
-# Palette matches the portfolio site (ethanbuckley.github.io): ordered by value,
-# not hue, so the states separate for readers who cannot rely on colour alone.
-# S = site --line, E/I = ochre family, Q = palette grey, R = page teal.
-STATE_COLOURS = ["#D5DDE2", "#E0A03D", "#A52F22", "#8A99A2", "#147A70"]
+# Palette matches the portfolio site (ethanbuckley.github.io, September 2026
+# tokens): ordered by value, not hue, so the states separate for readers who
+# cannot rely on colour alone. S = site --line, E/I = amber and red, Q = the
+# site's neutral grey, R = the site accent.
+STATE_COLOURS = ["#E4E7EB", "#E0A03D", "#A52F22", "#8D97A3", "#2440B3"]
 STATE_LABELS = ["Susceptible", "Exposed", "Infected", "Quarantined", "Recovered"]
-INK = "#17242c"          # site --ink
+INK = "#14181d"          # site --ink
+FONTS = ["Helvetica Neue", "Arial", "DejaVu Sans"]   # the site's system sans, then matplotlib's default
 
 OUTPUT = os.path.join(os.path.dirname(__file__), "assets", "demo.gif")
 
@@ -32,6 +34,8 @@ def main():
     # pyplot loads, without tripping the import-order lint at module level.
     import matplotlib
     matplotlib.use("Agg")
+    matplotlib.rcParams["font.family"] = "sans-serif"
+    matplotlib.rcParams["font.sans-serif"] = FONTS
     import matplotlib.pyplot as plt
     from matplotlib.animation import FuncAnimation, PillowWriter
     from matplotlib.colors import ListedColormap
