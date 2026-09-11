@@ -11,7 +11,7 @@ The structural zone radii are deliberately not held here. They live in model.py
 rather than a tunable rate.
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
 
 
 @dataclass(frozen=True)
@@ -43,3 +43,32 @@ class SimConfig:
     # Vaccination applied before the simulation starts
     vax_doses: int = 200
     vax_efficacy: float = 0.80
+
+    def __post_init__(self):
+        """Reject parameter sets the model cannot represent.
+
+        The model needs an interior, so n >= 3. Every probability must lie in
+        [0, 1], and because I -> Q and I -> R are decided by a single draw,
+        their probabilities must also sum to at most 1.
+        """
+        if self.n < 3:
+            raise ValueError(f"n must be at least 3 (got {self.n}); the border never updates")
+        if self.num_steps < 0:
+            raise ValueError(f"num_steps must be non-negative (got {self.num_steps})")
+        for f in fields(self):
+            if f.name.startswith(("p_", "lockdown_p")) or f.name == "vax_efficacy":
+                value = getattr(self, f.name)
+                if not 0.0 <= value <= 1.0:
+                    raise ValueError(f"{f.name} must be in [0, 1] (got {value})")
+        if self.p_quarantine + self.p_recover_i > 1.0:
+            raise ValueError(
+                "p_quarantine + p_recover_i must not exceed 1 (got "
+                f"{self.p_quarantine + self.p_recover_i}); one draw decides both exits"
+            )
+        if not 0 <= self.lockdown_start <= self.lockdown_end:
+            raise ValueError(
+                f"lockdown window must satisfy 0 <= start <= end "
+                f"(got {self.lockdown_start}, {self.lockdown_end})"
+            )
+        if self.vax_doses < 0:
+            raise ValueError(f"vax_doses must be non-negative (got {self.vax_doses})")

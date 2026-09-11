@@ -8,6 +8,8 @@ abstract: >-
   validation of the model against the analytical mean-field SEIQR ODE. An
   individual extension of a UCL group computing project.
 type: software
+version: "1.0.0"
+date-released: "2026-09-11"
 authors:
   - family-names: Buckley
     given-names: Ethan

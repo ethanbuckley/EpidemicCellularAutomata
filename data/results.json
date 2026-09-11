@@ -6583,9 +6583,9 @@
     ]
   },
   "speedup": {
-    "original_s": 0.505,
-    "vectorized_s": 0.0124,
-    "speedup_x": 41.0
+    "original_s": 0.529,
+    "vectorized_s": 0.0126,
+    "speedup_x": 42.0
   },
   "ode_validation": {
     "params": {
@@ -6597,6 +6597,7 @@
     },
     "N_interior": 2304,
     "n_runs": 20,
+    "major_outbreak_threshold": 0.1,
     "rates": {
       "sigma": 0.6931471805599453,
       "gamma_Q": 0.10834595299851661,
@@ -7845,7 +7846,10 @@
         0.0,
         0.0,
         0.0
-      ]
+      ],
+      "n_extinct": 1,
+      "attack_all": 0.9494574652777776,
+      "attack_major": 0.9994060672514619
     },
     "local_ca": {
       "I": [
@@ -7950,7 +7954,8 @@
         48.8,
         43.35,
         37.9
-      ]
+      ],
+      "n_extinct": 0
     },
     "metrics": {
       "vs_ode": {
@@ -7984,7 +7989,7 @@
     "middle": 800,
     "outer": 1411
   },
-  "generated_at": "2026-07-03T20:22:13Z",
+  "generated_at": "2026-09-11T19:15:03Z",
   "lockdown_window": [
     10,
     40

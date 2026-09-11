@@ -73,7 +73,7 @@ def _compare(regen, ref, path, rtol):
             )
     elif isinstance(ref, list):
         assert len(regen) == len(ref), f"{path}: length {len(regen)} != {len(ref)}"
-        for idx, (r, e) in enumerate(zip(regen, ref)):
+        for idx, (r, e) in enumerate(zip(regen, ref, strict=True)):
             _compare(r, e, f"{path}[{idx}]", rtol)
     elif isinstance(ref, bool):
         assert regen == ref, f"{path}: {regen!r} != {ref!r}"
