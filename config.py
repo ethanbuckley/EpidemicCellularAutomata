@@ -23,16 +23,16 @@ class SimConfig:
     num_steps: int = 100
 
     # Per-timestep disease transition probabilities
-    p_infect: float = 0.50      # E -> I
+    p_infect: float = 0.50  # E -> I
     p_quarantine: float = 0.10  # I -> Q
-    p_recover_i: float = 0.05   # I -> R (unquarantined)
-    p_recover_q: float = 0.10   # Q -> R
+    p_recover_i: float = 0.05  # I -> R (unquarantined)
+    p_recover_q: float = 0.10  # Q -> R
 
     # Zone exposure probabilities for the density map
     p_centre: float = 0.50
     p_middle: float = 0.30
     p_outer: float = 0.15
-    p_uniform: float = 0.30     # single value used for the uniform-grid control
+    p_uniform: float = 0.30  # single value used for the uniform-grid control
 
     # Lockdown: exposure probability applied within affected zones during
     # the half-open window [lockdown_start, lockdown_end)

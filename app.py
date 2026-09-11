@@ -33,16 +33,24 @@ NUM_STEPS = 100
 # Discrete colour scale mapping states 0–4 to S/E/I/Q/R colours
 # Each state occupies a 0.2-wide band in [0,1]
 _STATE_COLORSCALE = [
-    [0.00, "#2563EB"], [0.20, "#2563EB"],   # S — blue
-    [0.20, "#F97316"], [0.40, "#F97316"],   # E — orange
-    [0.40, "#DC2626"], [0.60, "#DC2626"],   # I — red
-    [0.60, "#7C3AED"], [0.80, "#7C3AED"],   # Q — purple
-    [0.80, "#16A34A"], [1.00, "#16A34A"],   # R — green
+    [0.00, "#2563EB"],
+    [0.20, "#2563EB"],  # S — blue
+    [0.20, "#F97316"],
+    [0.40, "#F97316"],  # E — orange
+    [0.40, "#DC2626"],
+    [0.60, "#DC2626"],  # I — red
+    [0.60, "#7C3AED"],
+    [0.80, "#7C3AED"],  # Q — purple
+    [0.80, "#16A34A"],
+    [1.00, "#16A34A"],  # R — green
 ]
 
 _CURVE_COLORS = {
-    "S": "#2563EB", "E": "#F97316",
-    "I": "#DC2626", "Q": "#7C3AED", "R": "#16A34A",
+    "S": "#2563EB",
+    "E": "#F97316",
+    "I": "#DC2626",
+    "Q": "#7C3AED",
+    "R": "#16A34A",
 }
 
 # =============================================================================
@@ -84,24 +92,32 @@ st.info(
 # TABS
 # =============================================================================
 
-tab_interactive, tab_report, tab_perf = st.tabs([
-    "Interactive Simulation", "Report Scenarios", "Performance",
-])
+tab_interactive, tab_report, tab_perf = st.tabs(
+    [
+        "Interactive Simulation",
+        "Report Scenarios",
+        "Performance",
+    ]
+)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
 # TAB 1 — INTERACTIVE SINGLE RUN
 # ─────────────────────────────────────────────────────────────────────────────
 
+
 def _make_grid_fig(grid: np.ndarray, step: int) -> go.Figure:
-    fig = go.Figure(go.Heatmap(
-        z=grid,
-        colorscale=_STATE_COLORSCALE,
-        zmin=0, zmax=4,
-        showscale=False,
-        hoverongaps=False,
-        hovertemplate="Row %{y}, Col %{x}<br>State %{z}<extra></extra>",
-    ))
+    fig = go.Figure(
+        go.Heatmap(
+            z=grid,
+            colorscale=_STATE_COLORSCALE,
+            zmin=0,
+            zmax=4,
+            showscale=False,
+            hoverongaps=False,
+            hovertemplate="Row %{y}, Col %{x}<br>State %{z}<extra></extra>",
+        )
+    )
     fig.update_layout(
         title=dict(text=f"Grid at t = {step}", font_size=14),
         xaxis=dict(showticklabels=False, scaleanchor="y"),
@@ -112,17 +128,23 @@ def _make_grid_fig(grid: np.ndarray, step: int) -> go.Figure:
     return fig
 
 
-def _make_curve_fig(S_c, E_c, I_c, Q_c, R_c,
-                    highlight_step=None,
-                    lockdown_window=None) -> go.Figure:
+def _make_curve_fig(
+    S_c, E_c, I_c, Q_c, R_c, highlight_step=None, lockdown_window=None
+) -> go.Figure:
     t = list(range(len(S_c)))
     fig = go.Figure()
 
     if lockdown_window:
         ls, le = lockdown_window
-        fig.add_vrect(x0=ls, x1=le, fillcolor="gray",
-                      opacity=0.15, line_width=0,
-                      annotation_text="lockdown", annotation_position="top left")
+        fig.add_vrect(
+            x0=ls,
+            x1=le,
+            fillcolor="gray",
+            opacity=0.15,
+            line_width=0,
+            annotation_text="lockdown",
+            annotation_position="top left",
+        )
 
     for label, counts, color in [
         ("S", S_c, _CURVE_COLORS["S"]),
@@ -131,14 +153,18 @@ def _make_curve_fig(S_c, E_c, I_c, Q_c, R_c,
         ("Q", Q_c, _CURVE_COLORS["Q"]),
         ("R", R_c, _CURVE_COLORS["R"]),
     ]:
-        fig.add_trace(go.Scatter(
-            x=t, y=counts, name=label, line=dict(color=color, width=2),
-            mode="lines",
-        ))
+        fig.add_trace(
+            go.Scatter(
+                x=t,
+                y=counts,
+                name=label,
+                line=dict(color=color, width=2),
+                mode="lines",
+            )
+        )
 
     if highlight_step is not None:
-        fig.add_vline(x=highlight_step, line_dash="dot",
-                      line_color="black", opacity=0.4)
+        fig.add_vline(x=highlight_step, line_dash="dot", line_color="black", opacity=0.4)
 
     fig.update_layout(
         title="Population curves",
@@ -159,36 +185,30 @@ with tab_interactive:
 
     with col_ctrl:
         st.markdown("**Disease parameters**")
-        p_infect     = st.slider("p_infect (E→I)",     0.0, 1.0, 0.50, 0.01)
+        p_infect = st.slider("p_infect (E→I)", 0.0, 1.0, 0.50, 0.01)
         p_quarantine = st.slider("p_quarantine (I→Q)", 0.0, 1.0, 0.10, 0.01)
-        p_recover_i  = st.slider("p_recover_i (I→R)",  0.0, 1.0, 0.05, 0.01)
-        p_recover_q  = st.slider("p_recover_q (Q→R)",  0.0, 1.0, 0.10, 0.01)
+        p_recover_i = st.slider("p_recover_i (I→R)", 0.0, 1.0, 0.05, 0.01)
+        p_recover_q = st.slider("p_recover_q (Q→R)", 0.0, 1.0, 0.10, 0.01)
 
         st.markdown("**Density map**")
         p_centre = st.slider("p_expose (centre)", 0.0, 1.0, 0.50, 0.05)
         p_middle = st.slider("p_expose (middle)", 0.0, 1.0, 0.30, 0.05)
-        p_outer  = st.slider("p_expose (outer)",  0.0, 1.0, 0.15, 0.05)
+        p_outer = st.slider("p_expose (outer)", 0.0, 1.0, 0.15, 0.05)
 
         st.markdown("**Lockdown**")
-        lockdown_scope = st.radio(
-            "Scope", ["None", "Centre only", "Whole grid"], horizontal=True)
+        lockdown_scope = st.radio("Scope", ["None", "Centre only", "Whole grid"], horizontal=True)
         if lockdown_scope != "None":
-            ld_start, ld_end = st.slider(
-                "Window (timesteps)", 0, NUM_STEPS, (10, 40))
+            ld_start, ld_end = st.slider("Window (timesteps)", 0, NUM_STEPS, (10, 40))
         else:
             ld_start, ld_end = None, None
 
         st.markdown("**Vaccination**")
-        vax_scope  = st.radio("Target", ["None", "Uniform", "Centre-first"],
-                               horizontal=True)
-        vax_doses  = st.slider("Doses", 0, 500, 200, 10,
-                                disabled=(vax_scope == "None"))
-        vax_eff    = st.slider("Efficacy", 0.0, 1.0, 0.80, 0.05,
-                                disabled=(vax_scope == "None"))
+        vax_scope = st.radio("Target", ["None", "Uniform", "Centre-first"], horizontal=True)
+        vax_doses = st.slider("Doses", 0, 500, 200, 10, disabled=(vax_scope == "None"))
+        vax_eff = st.slider("Efficacy", 0.0, 1.0, 0.80, 0.05, disabled=(vax_scope == "None"))
 
-        seed_val   = st.number_input("Random seed", 0, 9999, 42, 1)
-        run_btn    = st.button("Run simulation", type="primary",
-                               width="stretch")
+        seed_val = st.number_input("Random seed", 0, 9999, 42, 1)
+        run_btn = st.button("Run simulation", type="primary", width="stretch")
 
     # ── Run simulation ────────────────────────────────────────────────────────
     if run_btn or "sim_grids" not in st.session_state:
@@ -206,12 +226,16 @@ with tab_interactive:
         init_grid[N // 2, N // 2] = I
 
         if vax_scope != "None":
-            targeted = (vax_scope == "Centre-first")
-            init_grid = vaccinate(init_grid, N, vax_doses, targeted,
-                                  efficacy=vax_eff, rng=rng)
+            targeted = vax_scope == "Centre-first"
+            init_grid = vaccinate(init_grid, N, vax_doses, targeted, efficacy=vax_eff, rng=rng)
 
         grids, Sc, Ec, Ic, Qc, Rc = run_seiqr(
-            N, density_map, p_infect, p_quarantine, p_recover_i, p_recover_q,
+            N,
+            density_map,
+            p_infect,
+            p_quarantine,
+            p_recover_i,
+            p_recover_q,
             NUM_STEPS,
             lockdown_map=lockdown_map,
             lockdown_start=ld_start,
@@ -220,15 +244,22 @@ with tab_interactive:
             rng=rng,
             store_grids=True,
         )
-        st.session_state.update(dict(
-            sim_grids=grids, sim_S=Sc, sim_E=Ec, sim_I=Ic, sim_Q=Qc, sim_R=Rc,
-            sim_lockdown=(ld_start, ld_end) if lockdown_scope != "None" else None,
-        ))
+        st.session_state.update(
+            dict(
+                sim_grids=grids,
+                sim_S=Sc,
+                sim_E=Ec,
+                sim_I=Ic,
+                sim_Q=Qc,
+                sim_R=Rc,
+                sim_lockdown=(ld_start, ld_end) if lockdown_scope != "None" else None,
+            )
+        )
 
     # ── Visualisation ─────────────────────────────────────────────────────────
     with col_vis:
         step = st.slider("Timestep", 0, NUM_STEPS, 0, key="step_slider")
-        lw   = st.session_state.get("sim_lockdown")
+        lw = st.session_state.get("sim_lockdown")
 
         left, right = st.columns(2)
         with left:
@@ -239,10 +270,13 @@ with tab_interactive:
         with right:
             st.plotly_chart(
                 _make_curve_fig(
-                    st.session_state["sim_S"], st.session_state["sim_E"],
-                    st.session_state["sim_I"], st.session_state["sim_Q"],
+                    st.session_state["sim_S"],
+                    st.session_state["sim_E"],
+                    st.session_state["sim_I"],
+                    st.session_state["sim_Q"],
                     st.session_state["sim_R"],
-                    highlight_step=step, lockdown_window=lw,
+                    highlight_step=step,
+                    lockdown_window=lw,
                 ),
                 width="stretch",
             )
@@ -259,28 +293,42 @@ with tab_interactive:
 # TAB 2 — REPORT SCENARIOS
 # ─────────────────────────────────────────────────────────────────────────────
 
+
 def _line(fig, t, y, name, color, dash="solid", width=2):
-    fig.add_trace(go.Scatter(
-        x=t, y=y, name=name,
-        line=dict(color=color, width=width, dash=dash),
-    ))
+    fig.add_trace(
+        go.Scatter(
+            x=t,
+            y=y,
+            name=name,
+            line=dict(color=color, width=width, dash=dash),
+        )
+    )
 
 
 def _base_fig(title, yaxis="Cell count", height=360):
     fig = go.Figure()
     fig.update_layout(
-        title=title, xaxis_title="Timestep", yaxis_title=yaxis,
+        title=title,
+        xaxis_title="Timestep",
+        yaxis_title=yaxis,
         legend=dict(orientation="h", y=1.15),
-        margin=dict(l=0, r=0, t=60, b=0), height=height,
+        margin=dict(l=0, r=0, t=60, b=0),
+        height=height,
     )
     return fig
 
 
 def _add_lockdown_shade(fig, window):
     if window:
-        fig.add_vrect(x0=window[0], x1=window[1], fillcolor="gray",
-                      opacity=0.15, line_width=0,
-                      annotation_text="lockdown", annotation_position="top left")
+        fig.add_vrect(
+            x0=window[0],
+            x1=window[1],
+            fillcolor="gray",
+            opacity=0.15,
+            line_width=0,
+            annotation_text="lockdown",
+            annotation_position="top left",
+        )
 
 
 with tab_report:
@@ -313,7 +361,7 @@ with tab_report:
     fig4b = _base_fig("Fraction of each zone infected (5-run mean)", yaxis="Fraction infected")
     _line(fig4b, T, results["zone_breakdown"]["centre"], "Centre", "#DC2626")
     _line(fig4b, T, results["zone_breakdown"]["middle"], "Middle", "#F97316")
-    _line(fig4b, T, results["zone_breakdown"]["outer"],  "Outer",  "#2563EB")
+    _line(fig4b, T, results["zone_breakdown"]["outer"], "Outer", "#2563EB")
     st.plotly_chart(fig4b, width="stretch")
 
     st.caption(
@@ -330,9 +378,9 @@ with tab_report:
     with col5a:
         fig5a = _base_fig("Lockdown comparison (5-run mean)")
         _add_lockdown_shade(fig5a, LW)
-        _line(fig5a, T, results["lockdown_none"]["I"],   "No lockdown",      "#6B7280")
-        _line(fig5a, T, results["lockdown_whole"]["I"],  "Whole-grid",       "#DC2626")
-        _line(fig5a, T, results["lockdown_centre"]["I"], "Centre-only",      "#F97316", dash="dash")
+        _line(fig5a, T, results["lockdown_none"]["I"], "No lockdown", "#6B7280")
+        _line(fig5a, T, results["lockdown_whole"]["I"], "Whole-grid", "#DC2626")
+        _line(fig5a, T, results["lockdown_centre"]["I"], "Centre-only", "#F97316", dash="dash")
         st.plotly_chart(fig5a, width="stretch")
         st.caption(
             "Centre-only lockdown (12% of grid) achieves comparable suppression "
@@ -341,8 +389,8 @@ with tab_report:
 
     with col5b:
         fig5b = _base_fig("Vaccination comparison (200 doses, 5-run mean)")
-        _line(fig5b, T, results["vax_none"]["I"],     "No vaccination", "#6B7280")
-        _line(fig5b, T, results["vax_uniform"]["I"],  "Uniform",        "#6366F1")
+        _line(fig5b, T, results["vax_none"]["I"], "No vaccination", "#6B7280")
+        _line(fig5b, T, results["vax_uniform"]["I"], "Uniform", "#6366F1")
         _line(fig5b, T, results["vax_targeted"]["I"], "Targeted (centre)", "#16A34A", dash="dash")
         st.plotly_chart(fig5b, width="stretch")
         st.caption(
@@ -356,10 +404,17 @@ with tab_report:
     st.subheader("Combined strategy")
     fig7 = _base_fig("Combined strategy comparison (5-run mean)")
     _add_lockdown_shade(fig7, LW)
-    _line(fig7, T, results["combined_none"]["I"],     "No intervention",             "#6B7280")
-    _line(fig7, T, results["combined_vax_only"]["I"], "Targeted vax only",           "#F97316")
-    _line(fig7, T, results["combined_blanket"]["I"],  "Uniform vax + whole lockdown","#6366F1")
-    _line(fig7, T, results["combined_targeted"]["I"], "Targeted vax + centre lockdown","#16A34A", dash="dash")
+    _line(fig7, T, results["combined_none"]["I"], "No intervention", "#6B7280")
+    _line(fig7, T, results["combined_vax_only"]["I"], "Targeted vax only", "#F97316")
+    _line(fig7, T, results["combined_blanket"]["I"], "Uniform vax + whole lockdown", "#6366F1")
+    _line(
+        fig7,
+        T,
+        results["combined_targeted"]["I"],
+        "Targeted vax + centre lockdown",
+        "#16A34A",
+        dash="dash",
+    )
     st.plotly_chart(fig7, width="stretch")
     st.caption(
         "The targeted combination (centre vaccination + centre lockdown) achieves "
@@ -371,16 +426,25 @@ with tab_report:
     # ── Fig 6: Threshold sweep ────────────────────────────────────────────────
     st.subheader("Epidemic threshold sweep")
     ts = results["threshold_sweep"]
-    fig6 = _base_fig("Peak infected vs baseline p_expose (3-run mean)",
-                     yaxis="Peak infected", height=340)
-    fig6.add_trace(go.Scatter(
-        x=ts["baselines"], y=ts["uniform_peak"], name="Uniform grid",
-        line=dict(color="#6366F1", width=2),
-    ))
-    fig6.add_trace(go.Scatter(
-        x=ts["baselines"], y=ts["density_peak"], name="Density grid",
-        line=dict(color="#DC2626", width=2, dash="dash"),
-    ))
+    fig6 = _base_fig(
+        "Peak infected vs baseline p_expose (3-run mean)", yaxis="Peak infected", height=340
+    )
+    fig6.add_trace(
+        go.Scatter(
+            x=ts["baselines"],
+            y=ts["uniform_peak"],
+            name="Uniform grid",
+            line=dict(color="#6366F1", width=2),
+        )
+    )
+    fig6.add_trace(
+        go.Scatter(
+            x=ts["baselines"],
+            y=ts["density_peak"],
+            name="Density grid",
+            line=dict(color="#DC2626", width=2, dash="dash"),
+        )
+    )
     fig6.update_layout(xaxis_title="Baseline p_expose")
     st.plotly_chart(fig6, width="stretch")
     st.caption(
@@ -401,10 +465,16 @@ with tab_perf:
     if results:
         sp = results["speedup"]
         c1, c2, c3 = st.columns(3)
-        c1.metric("Original (loop)", f"{sp['original_s']:.3f}s",
-                  help="seiqr.py nested Python loop over all 2,500 cells")
-        c2.metric("Vectorized", f"{sp['vectorized_s']:.4f}s",
-                  help="model.py NumPy + scipy.signal.convolve2d")
+        c1.metric(
+            "Original (loop)",
+            f"{sp['original_s']:.3f}s",
+            help="seiqr.py nested Python loop over all 2,500 cells",
+        )
+        c2.metric(
+            "Vectorized",
+            f"{sp['vectorized_s']:.4f}s",
+            help="model.py NumPy + scipy.signal.convolve2d",
+        )
         c3.metric("Speedup", f"{sp['speedup_x']:.0f}×")
 
     st.markdown(
@@ -460,41 +530,63 @@ with tab_perf:
         N_int = ov["N_interior"]
         Tv = list(range(len(ov["ode"]["I"])))
 
-        wm_I  = ov["well_mixed_ca"]["I"]
+        wm_I = ov["well_mixed_ca"]["I"]
         wm_sd = ov["well_mixed_ca"]["I_std"]
         upper = [m + s for m, s in zip(wm_I, wm_sd)]
         lower = [m - s for m, s in zip(wm_I, wm_sd)]
 
         figv = go.Figure()
-        figv.add_trace(go.Scatter(
-            x=Tv + Tv[::-1], y=upper + lower[::-1], fill="toself",
-            fillcolor="rgba(37,99,235,0.15)", line=dict(width=0),
-            hoverinfo="skip", showlegend=False,
-        ))
-        figv.add_trace(go.Scatter(
-            x=Tv, y=wm_I, name=f"Global-coupling CA ({ov['n_runs']} runs, ±1σ)",
-            line=dict(color="#2563EB", width=2)))
-        figv.add_trace(go.Scatter(
-            x=Tv, y=ov["ode"]["I"], name="Mean-field ODE",
-            line=dict(color="#111827", width=2)))
-        figv.add_trace(go.Scatter(
-            x=Tv, y=ov["local_ca"]["I"], name="Local (spatial) CA",
-            line=dict(color="#DC2626", width=2, dash="dash")))
+        figv.add_trace(
+            go.Scatter(
+                x=Tv + Tv[::-1],
+                y=upper + lower[::-1],
+                fill="toself",
+                fillcolor="rgba(37,99,235,0.15)",
+                line=dict(width=0),
+                hoverinfo="skip",
+                showlegend=False,
+            )
+        )
+        figv.add_trace(
+            go.Scatter(
+                x=Tv,
+                y=wm_I,
+                name=f"Global-coupling CA ({ov['n_runs']} runs, ±1σ)",
+                line=dict(color="#2563EB", width=2),
+            )
+        )
+        figv.add_trace(
+            go.Scatter(
+                x=Tv, y=ov["ode"]["I"], name="Mean-field ODE", line=dict(color="#111827", width=2)
+            )
+        )
+        figv.add_trace(
+            go.Scatter(
+                x=Tv,
+                y=ov["local_ca"]["I"],
+                name="Local (spatial) CA",
+                line=dict(color="#DC2626", width=2, dash="dash"),
+            )
+        )
         figv.update_layout(
             title="Infected count: analytical ODE vs well-mixed and spatial CA",
-            xaxis_title="Timestep", yaxis_title=f"Infected (of {N_int} interior cells)",
+            xaxis_title="Timestep",
+            yaxis_title=f"Infected (of {N_int} interior cells)",
             legend=dict(orientation="h", y=1.15),
-            margin=dict(l=0, r=0, t=60, b=0), height=420,
+            margin=dict(l=0, r=0, t=60, b=0),
+            height=420,
         )
         st.plotly_chart(figv, width="stretch")
 
         c1, c2, c3, c4 = st.columns(4)
         c1.metric("R₀ (well-mixed)", f"{ov['rates']['R0']:.1f}")
-        c2.metric("Peak I: CA / ODE", f"{m_ode['peak_ca']:.0f} / {m_ode['peak_ref']:.0f}",
-                  help="Well-mixed CA ensemble-mean peak vs the ODE peak "
-                       f"({m_ode['peak_rel_err_pct']:.1f}% apart)")
-        c3.metric("Attack rate: CA / ODE",
-                  f"{m_ode['attack_ca']:.3f} / {m_ode['attack_ref']:.3f}")
+        c2.metric(
+            "Peak I: CA / ODE",
+            f"{m_ode['peak_ca']:.0f} / {m_ode['peak_ref']:.0f}",
+            help="Well-mixed CA ensemble-mean peak vs the ODE peak "
+            f"({m_ode['peak_rel_err_pct']:.1f}% apart)",
+        )
+        c3.metric("Attack rate: CA / ODE", f"{m_ode['attack_ca']:.3f} / {m_ode['attack_ref']:.3f}")
         c4.metric("RMSE vs exact recursion", f"{m_rec['rmse_pct_of_peak']:.1f}% of peak")
 
         st.caption(

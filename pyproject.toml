@@ -4,6 +4,7 @@ testpaths = ["tests"]
 
 [tool.ruff]
 target-version = "py310"
+line-length = 100
 
 [tool.ruff.lint]
 # S, E, I, Q, R are the standard SEIQR compartment names used throughout the
@@ -15,3 +16,7 @@ ignore = ["E741"]
 # reference and equivalence-test target, so its legacy unused imports are not
 # linted.
 "seiqr.py" = ["F401"]
+
+[tool.ruff.format]
+# seiqr.py is the preserved original group-project code, kept verbatim.
+exclude = ["seiqr.py"]

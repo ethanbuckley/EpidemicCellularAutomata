@@ -64,7 +64,9 @@ def _compare(regen, ref, path, rtol):
         b = np.asarray(ref, dtype=float)
         assert a.shape == b.shape, f"{path}: shape {a.shape} != {b.shape}"
         if rtol is None:
-            assert np.array_equal(a, b), f"{path}: not bit-identical (max abs diff {_maxdiff(a, b)})"
+            assert np.array_equal(a, b), (
+                f"{path}: not bit-identical (max abs diff {_maxdiff(a, b)})"
+            )
         else:
             assert np.allclose(a, b, rtol=rtol, atol=ODE_ATOL, equal_nan=True), (
                 f"{path}: exceeds tolerance rtol={rtol} (max abs diff {_maxdiff(a, b)})"

@@ -52,8 +52,15 @@ def test_R0_matches_definition():
 
 
 def test_ode_conserves_compartments():
-    out = oref.integrate_seiqr(CFG.p_uniform, CFG.p_infect, CFG.p_quarantine,
-                               CFG.p_recover_i, CFG.p_recover_q, CFG.num_steps, N=N)
+    out = oref.integrate_seiqr(
+        CFG.p_uniform,
+        CFG.p_infect,
+        CFG.p_quarantine,
+        CFG.p_recover_i,
+        CFG.p_recover_q,
+        CFG.num_steps,
+        N=N,
+    )
     frac_total = sum(out["frac"][k] for k in "SEIQR")
     assert np.allclose(frac_total, 1.0, atol=1e-6)
     count_total = sum(out["counts"][k] for k in "SEIQR")
@@ -61,8 +68,15 @@ def test_ode_conserves_compartments():
 
 
 def test_discrete_recursion_conserves_compartments():
-    rec = oref.seiqr_discrete_meanfield(CFG.p_uniform, CFG.p_infect, CFG.p_quarantine,
-                                        CFG.p_recover_i, CFG.p_recover_q, CFG.num_steps, N=N)
+    rec = oref.seiqr_discrete_meanfield(
+        CFG.p_uniform,
+        CFG.p_infect,
+        CFG.p_quarantine,
+        CFG.p_recover_i,
+        CFG.p_recover_q,
+        CFG.num_steps,
+        N=N,
+    )
     total = sum(rec["frac"][k] for k in "SEIQR")
     assert np.allclose(total, 1.0, atol=1e-9)
 
@@ -73,22 +87,52 @@ def test_well_mixed_ca_reproduces_discrete_recursion():
     This is the core validation that the discrete->continuous rate mapping and
     the combined-hazard split are correct, with no continuous-time approximation.
     """
-    rec = oref.seiqr_discrete_meanfield(CFG.p_uniform, CFG.p_infect, CFG.p_quarantine,
-                                        CFG.p_recover_i, CFG.p_recover_q, CFG.num_steps, N=N)
-    wm = oref.run_well_mixed_ensemble(10, CFG.n, CFG.p_uniform, CFG.p_infect,
-                                      CFG.p_quarantine, CFG.p_recover_i, CFG.p_recover_q,
-                                      CFG.num_steps, seed=0)
+    rec = oref.seiqr_discrete_meanfield(
+        CFG.p_uniform,
+        CFG.p_infect,
+        CFG.p_quarantine,
+        CFG.p_recover_i,
+        CFG.p_recover_q,
+        CFG.num_steps,
+        N=N,
+    )
+    wm = oref.run_well_mixed_ensemble(
+        10,
+        CFG.n,
+        CFG.p_uniform,
+        CFG.p_infect,
+        CFG.p_quarantine,
+        CFG.p_recover_i,
+        CFG.p_recover_q,
+        CFG.num_steps,
+        seed=0,
+    )
     m = oref.compare_curves(wm["mean"], rec["counts"], N)
     assert m["rmse_pct_of_peak"] < 5.0
 
 
 def test_well_mixed_ca_tracks_ode():
     """The global-coupling CA reproduces the continuous ODE peak and attack rate."""
-    ode = oref.integrate_seiqr(CFG.p_uniform, CFG.p_infect, CFG.p_quarantine,
-                               CFG.p_recover_i, CFG.p_recover_q, CFG.num_steps, N=N)
-    wm = oref.run_well_mixed_ensemble(10, CFG.n, CFG.p_uniform, CFG.p_infect,
-                                      CFG.p_quarantine, CFG.p_recover_i, CFG.p_recover_q,
-                                      CFG.num_steps, seed=0)
+    ode = oref.integrate_seiqr(
+        CFG.p_uniform,
+        CFG.p_infect,
+        CFG.p_quarantine,
+        CFG.p_recover_i,
+        CFG.p_recover_q,
+        CFG.num_steps,
+        N=N,
+    )
+    wm = oref.run_well_mixed_ensemble(
+        10,
+        CFG.n,
+        CFG.p_uniform,
+        CFG.p_infect,
+        CFG.p_quarantine,
+        CFG.p_recover_i,
+        CFG.p_recover_q,
+        CFG.num_steps,
+        seed=0,
+    )
     m = oref.compare_curves(wm["mean"], ode["counts"], N)
     assert m["peak_rel_err_pct"] < 10.0
     assert abs(m["attack_ca"] - m["attack_ref"]) < 0.02
@@ -96,11 +140,27 @@ def test_well_mixed_ca_tracks_ode():
 
 def test_local_ca_departs_from_well_mixed():
     """Spatial structure suppresses and delays the peak relative to the ODE limit."""
-    wm = oref.run_well_mixed_ensemble(10, CFG.n, CFG.p_uniform, CFG.p_infect,
-                                      CFG.p_quarantine, CFG.p_recover_i, CFG.p_recover_q,
-                                      CFG.num_steps, seed=0)
-    loc = oref.run_local_ensemble(10, CFG.n, CFG.p_uniform, CFG.p_infect,
-                                  CFG.p_quarantine, CFG.p_recover_i, CFG.p_recover_q,
-                                  CFG.num_steps, seed=0)
+    wm = oref.run_well_mixed_ensemble(
+        10,
+        CFG.n,
+        CFG.p_uniform,
+        CFG.p_infect,
+        CFG.p_quarantine,
+        CFG.p_recover_i,
+        CFG.p_recover_q,
+        CFG.num_steps,
+        seed=0,
+    )
+    loc = oref.run_local_ensemble(
+        10,
+        CFG.n,
+        CFG.p_uniform,
+        CFG.p_infect,
+        CFG.p_quarantine,
+        CFG.p_recover_i,
+        CFG.p_recover_q,
+        CFG.num_steps,
+        seed=0,
+    )
     assert loc["I_mean"].max() < 0.6 * wm["I_mean"].max()
     assert loc["I_mean"].argmax() > wm["I_mean"].argmax()

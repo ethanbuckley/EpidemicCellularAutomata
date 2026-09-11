@@ -44,6 +44,7 @@ def interior_n(n: int) -> int:
 # Rate mapping
 # =============================================================================
 
+
 def p_to_rate(p: float) -> float:
     """Convert a per-timestep probability to a continuous hazard rate.
 
@@ -53,8 +54,9 @@ def p_to_rate(p: float) -> float:
     return -np.log1p(-p)
 
 
-def seiqr_rates(p_infect: float, p_quarantine: float,
-                p_recover_i: float, p_recover_q: float) -> dict:
+def seiqr_rates(
+    p_infect: float, p_quarantine: float, p_recover_i: float, p_recover_q: float
+) -> dict:
     """Map the CA per-step transition probabilities to ODE rates.
 
     E -> I and Q -> R are single exits (sigma, delta). I -> Q and I -> R
@@ -107,9 +109,17 @@ def R0(p_expose: float, rates: dict) -> float:
 # Analytical references
 # =============================================================================
 
-def integrate_seiqr(p_expose: float, p_infect: float, p_quarantine: float,
-                    p_recover_i: float, p_recover_q: float, num_steps: int,
-                    N: int = None, i0: float = None) -> dict:
+
+def integrate_seiqr(
+    p_expose: float,
+    p_infect: float,
+    p_quarantine: float,
+    p_recover_i: float,
+    p_recover_q: float,
+    num_steps: int,
+    N: int = None,
+    i0: float = None,
+) -> dict:
     """Integrate the continuous well-mixed SEIQR ODE over [0, num_steps].
 
     Returns fraction and count curves sampled at each integer timestep, the
@@ -138,9 +148,15 @@ def integrate_seiqr(p_expose: float, p_infect: float, p_quarantine: float,
         ]
 
     y0 = [1.0 - i0, 0.0, i0, 0.0, 0.0]
-    sol = solve_ivp(rhs, (0.0, num_steps), y0,
-                    t_eval=np.arange(num_steps + 1),
-                    rtol=1e-8, atol=1e-10, method="RK45")
+    sol = solve_ivp(
+        rhs,
+        (0.0, num_steps),
+        y0,
+        t_eval=np.arange(num_steps + 1),
+        rtol=1e-8,
+        atol=1e-10,
+        method="RK45",
+    )
 
     frac = {k: sol.y[idx] for idx, k in enumerate(("S", "E", "I", "Q", "R"))}
     total = sum(frac.values())
@@ -148,13 +164,19 @@ def integrate_seiqr(p_expose: float, p_infect: float, p_quarantine: float,
     assert drift < 1e-6, f"ODE compartments not conserved (drift {drift:g})"
 
     counts = {k: frac[k] * N for k in frac}
-    return {"frac": frac, "counts": counts, "rates": rates,
-            "R0": R0(p_expose, rates), "N": N}
+    return {"frac": frac, "counts": counts, "rates": rates, "R0": R0(p_expose, rates), "N": N}
 
 
-def seiqr_discrete_meanfield(p_expose: float, p_infect: float, p_quarantine: float,
-                             p_recover_i: float, p_recover_q: float, num_steps: int,
-                             N: int = None, i0: float = None) -> dict:
+def seiqr_discrete_meanfield(
+    p_expose: float,
+    p_infect: float,
+    p_quarantine: float,
+    p_recover_i: float,
+    p_recover_q: float,
+    num_steps: int,
+    N: int = None,
+    i0: float = None,
+) -> dict:
     """The exact discrete recursion the CA implements in the well-mixed limit.
 
     This is the deterministic expectation of well_mixed_advance (below); it uses
@@ -196,8 +218,10 @@ def seiqr_discrete_meanfield(p_expose: float, p_infect: float, p_quarantine: flo
 # Global-coupling (well-mixed) CA — the same rules driven by the global fraction
 # =============================================================================
 
-def well_mixed_advance(grid, n, p_expose, p_infect, p_quarantine,
-                       p_recover_i, p_recover_q, rng, interior, n_interior):
+
+def well_mixed_advance(
+    grid, n, p_expose, p_infect, p_quarantine, p_recover_i, p_recover_q, rng, interior, n_interior
+):
     """One timestep of the CA with global coupling.
 
     Identical to model.seiqr_advance in every transition and in random-draw
@@ -219,31 +243,36 @@ def well_mixed_advance(grid, n, p_expose, p_infect, p_quarantine,
     r_i = rng.random((n, n))
     r_q = rng.random((n, n))
 
-    expose_mask     = is_S & interior & (r_s < p_se)
-    infect_mask     = is_E & interior & (r_e < p_infect)
+    expose_mask = is_S & interior & (r_s < p_se)
+    infect_mask = is_E & interior & (r_e < p_infect)
     quarantine_mask = is_I & interior & (r_i < p_quarantine)
-    recover_i_mask  = is_I & interior & ~quarantine_mask & (r_i < p_quarantine + p_recover_i)
-    recover_q_mask  = is_Q & interior & (r_q < p_recover_q)
+    recover_i_mask = is_I & interior & ~quarantine_mask & (r_i < p_quarantine + p_recover_i)
+    recover_q_mask = is_Q & interior & (r_q < p_recover_q)
 
     new_grid = grid.copy()
-    new_grid[expose_mask]     = E
-    new_grid[infect_mask]     = I
+    new_grid[expose_mask] = E
+    new_grid[infect_mask] = I
     new_grid[quarantine_mask] = Q
-    new_grid[recover_i_mask]  = R
-    new_grid[recover_q_mask]  = R
+    new_grid[recover_i_mask] = R
+    new_grid[recover_q_mask] = R
     return new_grid
 
 
 def _interior_counts(grid: np.ndarray) -> dict:
     """State counts over the interior (border-excluded) cells only."""
     inner = grid[1:-1, 1:-1]
-    return {"S": int((inner == S).sum()), "E": int((inner == E).sum()),
-            "I": int((inner == I).sum()), "Q": int((inner == Q).sum()),
-            "R": int((inner == R).sum())}
+    return {
+        "S": int((inner == S).sum()),
+        "E": int((inner == E).sum()),
+        "I": int((inner == I).sum()),
+        "Q": int((inner == Q).sum()),
+        "R": int((inner == R).sum()),
+    }
 
 
-def run_well_mixed_ensemble(n_runs, n, p_expose, p_infect, p_quarantine,
-                            p_recover_i, p_recover_q, num_steps, seed=0) -> dict:
+def run_well_mixed_ensemble(
+    n_runs, n, p_expose, p_infect, p_quarantine, p_recover_i, p_recover_q, num_steps, seed=0
+) -> dict:
     """Run the global-coupling CA n_runs times; return interior-only curves.
 
     Returns mean S/E/I/Q/R count curves, the per-run I curves and their std
@@ -263,21 +292,30 @@ def run_well_mixed_ensemble(n_runs, n, p_expose, p_infect, p_quarantine,
 
         for step in range(num_steps + 1):
             if step > 0:
-                grid = well_mixed_advance(grid, n, p_expose, p_infect,
-                                          p_quarantine, p_recover_i, p_recover_q,
-                                          rng, interior, n_int)
+                grid = well_mixed_advance(
+                    grid,
+                    n,
+                    p_expose,
+                    p_infect,
+                    p_quarantine,
+                    p_recover_i,
+                    p_recover_q,
+                    rng,
+                    interior,
+                    n_int,
+                )
             c = _interior_counts(grid)
             for k in "SEIQR":
                 totals[k][step] += c[k]
             I_runs[run, step] = c["I"]
 
     mean = {k: totals[k] / n_runs for k in "SEIQR"}
-    return {"mean": mean, "I_mean": mean["I"], "I_std": I_runs.std(axis=0),
-            "n_interior": n_int}
+    return {"mean": mean, "I_mean": mean["I"], "I_std": I_runs.std(axis=0), "n_interior": n_int}
 
 
-def run_local_ensemble(n_runs, n, p_expose, p_infect, p_quarantine,
-                       p_recover_i, p_recover_q, num_steps, seed=0) -> dict:
+def run_local_ensemble(
+    n_runs, n, p_expose, p_infect, p_quarantine, p_recover_i, p_recover_q, num_steps, seed=0
+) -> dict:
     """Run the standard local (spatial) CA on a uniform grid, interior-only counts.
 
     Reuses model.run_seiqr unchanged and recomputes interior counts from the
@@ -291,9 +329,17 @@ def run_local_ensemble(n_runs, n, p_expose, p_infect, p_quarantine,
 
     for run in range(n_runs):
         rng = np.random.default_rng(seed + run)
-        grids, *_ = model.run_seiqr(n, uniform_map, p_infect, p_quarantine,
-                                    p_recover_i, p_recover_q, num_steps,
-                                    rng=rng, store_grids=True)
+        grids, *_ = model.run_seiqr(
+            n,
+            uniform_map,
+            p_infect,
+            p_quarantine,
+            p_recover_i,
+            p_recover_q,
+            num_steps,
+            rng=rng,
+            store_grids=True,
+        )
         for step, g in enumerate(grids):
             c = _interior_counts(g)
             for k in "SEIQR":
@@ -307,6 +353,7 @@ def run_local_ensemble(n_runs, n, p_expose, p_infect, p_quarantine,
 # =============================================================================
 # Comparison
 # =============================================================================
+
 
 def compare_curves(ca: dict, ref: dict, N: int) -> dict:
     """Agreement metrics between a CA ensemble mean and an analytical reference.
@@ -323,7 +370,9 @@ def compare_curves(ca: dict, ref: dict, N: int) -> dict:
     return {
         "peak_ca": float(ca_I.max()),
         "peak_ref": peak_ref,
-        "peak_rel_err_pct": 100.0 * abs(ca_I.max() - peak_ref) / peak_ref if peak_ref else float("nan"),
+        "peak_rel_err_pct": 100.0 * abs(ca_I.max() - peak_ref) / peak_ref
+        if peak_ref
+        else float("nan"),
         "t_peak_ca": int(ca_I.argmax()),
         "t_peak_ref": int(ref_I.argmax()),
         "t_peak_gap": int(abs(int(ca_I.argmax()) - int(ref_I.argmax()))),
@@ -343,14 +392,34 @@ if __name__ == "__main__":
     N = interior_n(cfg.n)
     p = cfg.p_uniform
 
-    ode = integrate_seiqr(p, cfg.p_infect, cfg.p_quarantine,
-                          cfg.p_recover_i, cfg.p_recover_q, cfg.num_steps, N=N)
-    rec = seiqr_discrete_meanfield(p, cfg.p_infect, cfg.p_quarantine,
-                                   cfg.p_recover_i, cfg.p_recover_q, cfg.num_steps, N=N)
-    wm = run_well_mixed_ensemble(10, cfg.n, p, cfg.p_infect, cfg.p_quarantine,
-                                 cfg.p_recover_i, cfg.p_recover_q, cfg.num_steps, seed=0)
-    loc = run_local_ensemble(10, cfg.n, p, cfg.p_infect, cfg.p_quarantine,
-                             cfg.p_recover_i, cfg.p_recover_q, cfg.num_steps, seed=0)
+    ode = integrate_seiqr(
+        p, cfg.p_infect, cfg.p_quarantine, cfg.p_recover_i, cfg.p_recover_q, cfg.num_steps, N=N
+    )
+    rec = seiqr_discrete_meanfield(
+        p, cfg.p_infect, cfg.p_quarantine, cfg.p_recover_i, cfg.p_recover_q, cfg.num_steps, N=N
+    )
+    wm = run_well_mixed_ensemble(
+        10,
+        cfg.n,
+        p,
+        cfg.p_infect,
+        cfg.p_quarantine,
+        cfg.p_recover_i,
+        cfg.p_recover_q,
+        cfg.num_steps,
+        seed=0,
+    )
+    loc = run_local_ensemble(
+        10,
+        cfg.n,
+        p,
+        cfg.p_infect,
+        cfg.p_quarantine,
+        cfg.p_recover_i,
+        cfg.p_recover_q,
+        cfg.num_steps,
+        seed=0,
+    )
 
     print(f"N interior            = {N}")
     print(f"R0 (well-mixed)       = {ode['R0']:.1f}")
@@ -359,12 +428,18 @@ if __name__ == "__main__":
     m_ode = compare_curves(wm["mean"], ode["counts"], N)
     m_rec = compare_curves(wm["mean"], rec["counts"], N)
     print("well-mixed CA vs continuous ODE:")
-    print(f"  peak {m_ode['peak_ca']:.1f} vs {m_ode['peak_ref']:.1f} "
-          f"({m_ode['peak_rel_err_pct']:.1f}%), t_peak {m_ode['t_peak_ca']} vs "
-          f"{m_ode['t_peak_ref']}, RMSE {m_ode['rmse_pct_of_peak']:.1f}% of peak")
+    print(
+        f"  peak {m_ode['peak_ca']:.1f} vs {m_ode['peak_ref']:.1f} "
+        f"({m_ode['peak_rel_err_pct']:.1f}%), t_peak {m_ode['t_peak_ca']} vs "
+        f"{m_ode['t_peak_ref']}, RMSE {m_ode['rmse_pct_of_peak']:.1f}% of peak"
+    )
     print("well-mixed CA vs exact discrete recursion:")
-    print(f"  RMSE {m_rec['rmse_pct_of_peak']:.1f}% of peak, "
-          f"attack {m_rec['attack_ca']:.3f} vs {m_rec['attack_ref']:.3f}")
-    print(f"local (spatial) CA peak = {loc['I_mean'].max():.1f} at "
-          f"t = {int(loc['I_mean'].argmax())} (vs well-mixed "
-          f"{wm['I_mean'].max():.1f} at t = {int(wm['I_mean'].argmax())})")
+    print(
+        f"  RMSE {m_rec['rmse_pct_of_peak']:.1f}% of peak, "
+        f"attack {m_rec['attack_ca']:.3f} vs {m_rec['attack_ref']:.3f}"
+    )
+    print(
+        f"local (spatial) CA peak = {loc['I_mean'].max():.1f} at "
+        f"t = {int(loc['I_mean'].argmax())} (vs well-mixed "
+        f"{wm['I_mean'].max():.1f} at t = {int(wm['I_mean'].argmax())})"
+    )
