@@ -4,14 +4,20 @@ testpaths = ["tests"]
 
 [tool.ruff]
 target-version = "py310"
+line-length = 100
 
 [tool.ruff.lint]
+# E/W pycodestyle, F pyflakes, I import order, UP pyupgrade, B bugbear, SIM simplify.
+select = ["E", "F", "W", "I", "UP", "B", "SIM"]
 # S, E, I, Q, R are the standard SEIQR compartment names used throughout the
 # model; I trips E741 (ambiguous name) but is intentional and expected here.
 ignore = ["E741"]
 
 [tool.ruff.lint.per-file-ignores]
 # seiqr.py is the preserved original group-project code, kept unmodified as a
-# reference and equivalence-test target, so its legacy unused imports are not
-# linted.
-"seiqr.py" = ["F401"]
+# reference and equivalence-test target, so its legacy style is not linted.
+"seiqr.py" = ["F401", "I001", "SIM102"]
+
+[tool.ruff.format]
+# seiqr.py is the preserved original group-project code, kept verbatim.
+exclude = ["seiqr.py"]

@@ -22,7 +22,7 @@ from model import make_density_map, run_seiqr
 # S = site --line, E/I = ochre family, Q = palette grey, R = page teal.
 STATE_COLOURS = ["#D5DDE2", "#E0A03D", "#A52F22", "#8A99A2", "#147A70"]
 STATE_LABELS = ["Susceptible", "Exposed", "Infected", "Quarantined", "Recovered"]
-INK = "#17242c"          # site --ink
+INK = "#17242c"  # site --ink
 
 OUTPUT = os.path.join(os.path.dirname(__file__), "assets", "demo.gif")
 
@@ -31,6 +31,7 @@ def main():
     # Import matplotlib inside main so the headless backend is selected before
     # pyplot loads, without tripping the import-order lint at module level.
     import matplotlib
+
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
     from matplotlib.animation import FuncAnimation, PillowWriter
@@ -39,9 +40,16 @@ def main():
     cfg = SimConfig()
     density = make_density_map(cfg.n, cfg.p_centre, cfg.p_middle, cfg.p_outer)
     grids, *_ = run_seiqr(
-        cfg.n, density, cfg.p_infect, cfg.p_quarantine,
-        cfg.p_recover_i, cfg.p_recover_q, cfg.num_steps,
-        rng=np.random.default_rng(42), store_grids=True)
+        cfg.n,
+        density,
+        cfg.p_infect,
+        cfg.p_quarantine,
+        cfg.p_recover_i,
+        cfg.p_recover_q,
+        cfg.num_steps,
+        rng=np.random.default_rng(42),
+        store_grids=True,
+    )
 
     frames = list(range(0, len(grids), 2))  # every second timestep
     cmap = ListedColormap(STATE_COLOURS)
@@ -55,12 +63,18 @@ def main():
     for spine in ax.spines.values():
         spine.set_edgecolor(INK)
         spine.set_linewidth(0.8)
-    title = ax.set_title("SEIQR spread on the density grid  (t = 0)",
-                         fontsize=10, color=INK)
+    title = ax.set_title("SEIQR spread on the density grid  (t = 0)", fontsize=10, color=INK)
 
     handles = [plt.Rectangle((0, 0), 1, 1, color=c) for c in STATE_COLOURS]
-    legend = ax.legend(handles, STATE_LABELS, loc="upper center",
-                       bbox_to_anchor=(0.5, -0.02), ncol=3, fontsize=7, frameon=False)
+    legend = ax.legend(
+        handles,
+        STATE_LABELS,
+        loc="upper center",
+        bbox_to_anchor=(0.5, -0.02),
+        ncol=3,
+        fontsize=7,
+        frameon=False,
+    )
     for text in legend.get_texts():
         text.set_color(INK)
     fig.tight_layout()
@@ -74,8 +88,7 @@ def main():
     os.makedirs(os.path.dirname(OUTPUT), exist_ok=True)
     anim.save(OUTPUT, writer=PillowWriter(fps=12))
     plt.close(fig)
-    print(f"wrote {OUTPUT}  "
-          f"({os.path.getsize(OUTPUT) / 1024:.0f} KB, {len(frames)} frames)")
+    print(f"wrote {OUTPUT}  ({os.path.getsize(OUTPUT) / 1024:.0f} KB, {len(frames)} frames)")
 
 
 if __name__ == "__main__":

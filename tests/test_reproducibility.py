@@ -64,14 +64,16 @@ def _compare(regen, ref, path, rtol):
         b = np.asarray(ref, dtype=float)
         assert a.shape == b.shape, f"{path}: shape {a.shape} != {b.shape}"
         if rtol is None:
-            assert np.array_equal(a, b), f"{path}: not bit-identical (max abs diff {_maxdiff(a, b)})"
+            assert np.array_equal(a, b), (
+                f"{path}: not bit-identical (max abs diff {_maxdiff(a, b)})"
+            )
         else:
             assert np.allclose(a, b, rtol=rtol, atol=ODE_ATOL, equal_nan=True), (
                 f"{path}: exceeds tolerance rtol={rtol} (max abs diff {_maxdiff(a, b)})"
             )
     elif isinstance(ref, list):
         assert len(regen) == len(ref), f"{path}: length {len(regen)} != {len(ref)}"
-        for idx, (r, e) in enumerate(zip(regen, ref)):
+        for idx, (r, e) in enumerate(zip(regen, ref, strict=True)):
             _compare(r, e, f"{path}[{idx}]", rtol)
     elif isinstance(ref, bool):
         assert regen == ref, f"{path}: {regen!r} != {ref!r}"

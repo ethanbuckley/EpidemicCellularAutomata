@@ -59,7 +59,8 @@ The cellular automaton's local update rules reduce to the classical well-mixed S
 
 - **Rate mapping.** Each per-timestep probability maps to a continuous ODE rate by `rate = -ln(1 - p)`. The common `rate ≈ p` shortcut is not used, because `p_infect = 0.50` makes it 28% wrong. The single-draw `I→Q` / `I→R` competition maps to a combined exit hazard, split in the ratio `p_quarantine : p_recover_i`.
 - **Saturating transmission.** The exposure rule fires on the presence of at least one infected Moore neighbour, so it saturates in the local infected count. Its mean-field force of infection is `λ(i) = -ln(1 - p_expose·(1 - (1 - i)^8))`, which linearises to a frequency-dependent `β = 8·p_expose` at low prevalence and gives a well-mixed basic reproduction number `R₀ = β / (γ_Q + γ_R) ≈ 15` at `p_expose = 0.30`.
-- **The result.** Driving the CA by the global infected fraction instead of local neighbours (the well-mixed limit) makes it match the analytical reference. A 20-run ensemble reproduces the exact discrete recursion to about 2% of peak (RMSE) and the continuous ODE's peak height to about 2%, with an essentially identical final attack rate. The continuous ODE peaks a few steps earlier than the discrete CA, a continuous-versus-discrete time effect at this high R₀; the discrete recursion carries no such approximation and is the tight reference.
+- **The result.** Driving the CA by the global infected fraction instead of local neighbours (the well-mixed limit) makes it match the analytical reference. A 20-run ensemble reproduces the exact discrete recursion to under 2% of peak (RMSE) and the continuous ODE's peak height to within 3%. The continuous ODE peaks a few steps earlier than the discrete CA, a continuous-versus-discrete time effect at this high R₀; the discrete recursion carries no such approximation and is the tight reference.
+- **Stochastic extinction.** One of the 20 well-mixed runs died out before the epidemic took off, which a deterministic ODE cannot do. That run is kept in the ensemble mean, so the mean attack rate over all runs is 0.95 against the ODE's 0.999. Over the 19 runs with a major outbreak the final attack rate is 0.999, matching the ODE. The dashboard reports the extinct-run count and both attack rates rather than averaging the difference away.
 - **What the spatial model does differently.** The standard local CA departs from the ODE, with a peak roughly 3.5 times lower and about 50 steps later. That departure is the genuine effect of spatial structure and local susceptible depletion, which is the reason for using a cellular automaton in the first place, not a validation failure.
 
 Comparisons use the participating interior of 2,304 cells (the 48×48 grid excluding the permanently-susceptible border), so the CA and ODE share a denominator. The implementation is in [`ode_reference.py`](ode_reference.py) and the overlay figure is in the dashboard's Performance tab.
@@ -75,7 +76,7 @@ Comparisons use the participating interior of 2,304 cells (the 48×48 grid exclu
 | No reproducible experiment script | `run_experiments.py`: all report scenarios in ~5 s, saved to `data/results.json` |
 | Console output only | Interactive Streamlit dashboard with live parameter controls and precomputed report figures |
 | No analytical validation | `ode_reference.py`: CA validated against the well-mixed SEIQR ODE (see above) |
-| No tests or CI | pytest suite plus GitHub Actions running ruff and pytest |
+| No tests or CI | pytest suite plus GitHub Actions running ruff and pytest on Python 3.10 to 3.13 |
 | ~20 hard-coded constants | `config.py`: a single `SimConfig` dataclass with documented defaults |
 
 **Phase 1 (complete):** vectorisation, experiment pipeline, interactive Streamlit dashboard.
@@ -125,7 +126,7 @@ EpidemicCellularAutomata/
 ├── run_experiments.py    # Reproduces all report scenarios, writes data/results.json
 ├── app.py                # Streamlit dashboard
 ├── make_demo_gif.py      # Renders the README preview animation
-├── tests/                # pytest suite (model core + ODE validation)
+├── tests/                # pytest suite: model core, config, ODE validation, results reproducibility, dashboard smoke test
 ├── data/
 │   └── results.json      # Precomputed ensemble results
 ├── assets/
@@ -170,6 +171,8 @@ python run_experiments.py   # ~5 seconds, includes the ODE validation
 streamlit run app.py
 ```
 
+This needs `requirements-dev.txt`: the speedup measurement times the original `seiqr.py`, which imports matplotlib.
+
 ### Run the tests
 
 ```bash
@@ -185,9 +188,10 @@ python make_demo_gif.py      # writes assets/demo.gif
 
 ### Run the original group model
 
+`seiqr.py` has no command-line entry point; call its functions from Python (it imports matplotlib, so install `requirements-dev.txt` first):
+
 ```bash
-pip install numpy matplotlib
-python seiqr.py
+python -c "import seiqr; dm = seiqr.make_density_map(50, 0.5, 0.3, 0.15); _, S, E, I, Q, R = seiqr.run_seiqr(50, dm, 0.5, 0.1, 0.05, 0.1, 100); print('peak infected', max(I))"
 ```
 
 ---
